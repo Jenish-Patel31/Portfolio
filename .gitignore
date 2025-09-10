@@ -1,0 +1,7 @@
+node_modules/
+.env
+/uploads
+curserPrompt.txt
+resume.txt
+skill_backup.jsx
+tree.txt

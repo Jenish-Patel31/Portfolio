@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border-color;
+  }
+  
+  body {
+    @apply bg-bg-primary text-text-primary font-sans;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent-blue hover:bg-accent-blue/90 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-accent-blue/50;
+  }
+  
+  .btn-secondary {
+    @apply bg-bg-card hover:bg-bg-secondary text-text-primary font-medium py-2 px-4 rounded-lg border border-border-color transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-accent-blue/50;
+  }
+  
+  .btn-outline {
+    @apply border border-accent-blue text-accent-blue hover:bg-accent-blue hover:text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-accent-blue/50;
+  }
+  
+  .card {
+    @apply bg-bg-card border border-border-color rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300;
+  }
+  
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-text-primary mb-4;
+  }
+  
+  .section-subtitle {
+    @apply text-lg text-text-secondary mb-8 max-w-2xl;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-accent-blue via-accent-cyan to-accent-green bg-clip-text text-transparent;
+  }
+  
+  .floating-element {
+    @apply fixed z-50 transition-all duration-300 hover:scale-110;
+  }
+  
+  .terminal-text {
+    @apply font-mono text-accent-green;
+  }
+  
+  .chat-bubble {
+    @apply bg-bg-card border border-border-color rounded-lg p-4 shadow-lg;
+  }
+  
+  .skill-progress {
+    @apply w-full bg-bg-secondary rounded-full h-2;
+  }
+  
+  .skill-progress-bar {
+    @apply h-2 rounded-full transition-all duration-1000 ease-out;
+  }
+  
+  .timeline-item {
+    @apply relative pl-8 pb-8 border-l border-border-color;
+  }
+  
+  .timeline-item::before {
+    content: '';
+    @apply absolute left-[-8px] top-0 w-4 h-4 bg-accent-blue rounded-full border-2 border-bg-primary;
+  }
+  
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4;
+  }
+  
+  .modal-content {
+    @apply bg-bg-card border border-border-color rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto;
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .backdrop-blur-xs {
+    backdrop-filter: blur(2px);
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border-color rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-accent-blue/50;
+}
+
+/* Selection styles */
+::selection {
+  @apply bg-accent-blue/20 text-text-primary;
+}
+
+/* Focus styles */
+*:focus {
+  @apply outline-none ring-2 ring-accent-blue/50 ring-offset-2 ring-offset-bg-primary;
+}
+
+/* Animation delays for staggered animations */
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animate-delay-400 {
+  animation-delay: 400ms;
+}
+
+.animate-delay-500 {
+  animation-delay: 500ms;
+}

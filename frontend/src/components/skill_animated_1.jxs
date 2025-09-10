@@ -1,0 +1,105 @@
+// // *****************************************************
+// //original code:
+
+
+import { useEffect, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Settings } from 'lucide-react'
+import { usePortfolioStore } from '../stores/portfolioStore'
+
+const glassBg =
+  'bg-white/10 backdrop-blur-md border border-white/20 shadow-xl'
+
+const SkillsSection = () => {
+  const { skills, fetchSkills, isLoading } = usePortfolioStore()
+  const [activeCategory, setActiveCategory] = useState('all')
+
+  useEffect(() => {
+    fetchSkills()
+  }, [fetchSkills])
+
+  // Get all unique categories
+  const categories = [
+    'all',
+    ...skills.map((cat) => cat.category)
+  ]
+
+  // Filtered skills
+  const filteredSkills =
+    activeCategory === 'all'
+      ? skills.flatMap((cat) => cat.skills.map((s) => ({ ...s, category: cat.category })))
+      : (skills.find((cat) => cat.category === activeCategory)?.skills || []).map((s) => ({ ...s, category: activeCategory }))
+
+  return (
+    <section id="skills" className="py-16 px-4">
+      <div className="max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h2 className="section-title text-3xl md:text-4xl font-bold mb-2">
+            <span className="gradient-text">Skills</span>
+          </h2>
+          <p className="section-subtitle text-lg text-text-secondary">
+            Explore my technical toolkit by category
+          </p>
+        </motion.div>
+        {/* Category Filter */}
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              className={`px-4 py-1.5 rounded-full font-medium transition-all duration-200 border border-white/20 text-sm ${
+                activeCategory === cat
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                  : glassBg + ' text-text-secondary hover:bg-white/20'
+              }`}
+              onClick={() => setActiveCategory(cat)}
+            >
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </button>
+          ))}
+        </div>
+        {/* Skills Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <AnimatePresence>
+            {filteredSkills.map((skill, idx) => (
+              <motion.div
+                key={skill.name + idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                whileHover={{ scale: 1.08, rotate: -2 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                className={`flex flex-col items-center justify-center text-center p-4 rounded-2xl ${glassBg} group cursor-pointer relative overflow-hidden`}
+              >
+                {/* Glass shine effect */}
+                <span className="absolute left-0 top-0 w-full h-full pointer-events-none">
+                  <span className="block w-1/2 h-full bg-gradient-to-br from-white/30 to-transparent blur-2xl opacity-0 group-hover:opacity-60 transition-all duration-500" />
+                </span>
+                <div className="w-12 h-12 mb-2 flex items-center justify-center rounded-lg bg-bg-secondary shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  {skill.icon ? (
+                    <span className="text-2xl">{skill.icon}</span>
+                  ) : (
+                    <Settings className="w-6 h-6 text-text-secondary" />
+                  )}
+                </div>
+                <span className="text-sm font-semibold text-text-primary truncate w-24" title={skill.name}>
+                  {skill.name}
+                </span>
+                <span className="text-xs text-text-secondary mt-1 opacity-70 group-hover:opacity-100 transition-opacity duration-200">
+                  {skill.category.charAt(0).toUpperCase() + skill.category.slice(1)}
+                </span>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default SkillsSection
