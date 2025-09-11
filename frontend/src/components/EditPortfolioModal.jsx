@@ -396,9 +396,9 @@ const EditPortfolioModal = () => {
 
   const tabs = [
     { id: 'hero', label: 'Hero Section', icon: 'User' },
-    { id: 'projects', label: 'Projects', icon: 'Rocket' },
-    { id: 'experience', label: 'Experience', icon: 'Briefcase' },
     { id: 'skills', label: 'Skills', icon: 'Zap' },
+    { id: 'experience', label: 'Experience', icon: 'Briefcase' },
+    { id: 'projects', label: 'Projects', icon: 'Rocket' },
     { id: 'education', label: 'Education', icon: 'GraduationCap' },
     { id: 'achievements', label: 'Achievements', icon: 'Trophy' },
     { id: 'leadership', label: 'Leadership', icon: 'Crown' }

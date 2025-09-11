@@ -70,7 +70,7 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-text-primary">Quick Links</h3>
             <ul className="space-y-2 px-1">
-              {['Home', 'Projects', 'Experience', 'Skills', 'Education', 'Achievements'].map((item) => (
+              {['Home', 'Skills', 'Experience', 'Projects', 'Education', 'Achievements'].map((item) => (
                 <li key={item}>
                   <button
                     onClick={() => document.getElementById(item.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })}

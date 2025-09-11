@@ -19,9 +19,9 @@ import { useModalStore } from '../stores/modalStore';
 
 const NAV_LINKS = [
   { label: 'Home', section: 'home', icon: <Home size={22} /> },
-  { label: 'Projects', section: 'projects', icon: <Folder size={22} /> },
-  { label: 'Experience', section: 'experience', icon: <User size={22} /> },
   { label: 'Skills', section: 'skills', icon: <Star size={22} /> },
+  { label: 'Experience', section: 'experience', icon: <User size={22} /> },
+  { label: 'Projects', section: 'projects', icon: <Folder size={22} /> },
   { label: 'Education', section: 'education', icon: <BookOpen size={22} /> },
   { label: 'Achievements', section: 'achievements', icon: <Trophy size={22} /> },
   { label: 'Leadership', section: 'leadership', icon: <Users size={22} /> },

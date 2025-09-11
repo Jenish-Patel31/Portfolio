@@ -48,9 +48,9 @@ function App() {
           transition={{ duration: 0.5, ease: 'easeInOut' }}
         >
           <HeroSection />
-          <ProjectsSection />
-          <ExperienceSection />
           <SkillsSection />
+          <ExperienceSection />
+          <ProjectsSection />
           <EducationSection />
           <AchievementsSection />
           <LeadershipSection />
