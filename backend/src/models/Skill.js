@@ -4,8 +4,13 @@ const skillSchema = new mongoose.Schema({
   category: {
     type: String,
     required: [true, 'Skill category is required'],
-    enum: ['frontend', 'backend', 'devops', 'tools', 'languages', 'databases', 'cloud', 'ai', 'blockchain', 'emerging'],
-    trim: true
+    trim: true,
+    lowercase: true
+  },
+  description: {
+    type: String,
+    trim: true,
+    default: ''
   },
   skills: [{
     name: {
@@ -22,6 +27,13 @@ const skillSchema = new mongoose.Schema({
       type: String,
       trim: true,
       default: '#3b82f6'
+    },
+    proficiency: {
+      type: Number,
+      required: [true, 'Skill proficiency level is required'],
+      min: [0, 'Proficiency cannot be less than 0'],
+      max: [100, 'Proficiency cannot be more than 100'],
+      default: 70
     },
     yearsOfExperience: {
       type: Number,

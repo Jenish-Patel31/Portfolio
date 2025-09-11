@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useTypewriter } from '../hooks/useTypewriter'
 import { motion } from 'framer-motion'
-import { Github, Linkedin, Mail, Phone, MapPin, ExternalLink } from 'lucide-react'
+import { Github, Linkedin, Mail, Phone, MapPin, ExternalLink, Download } from 'lucide-react'
 import { usePortfolioStore } from '../stores/portfolioStore'
 
 const HeroSection = () => {

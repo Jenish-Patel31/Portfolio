@@ -2,7 +2,10 @@ import axios from 'axios'
 
 // Create axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  // baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+ 
+
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -19,6 +22,9 @@ api.interceptors.request.use(
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+      console.log('API Request with token:', config.url, token.substring(0, 20) + '...')
+    } else {
+      console.log('API Request without token:', config.url)
     }
     
     return config
@@ -34,9 +40,12 @@ api.interceptors.response.use(
     return response
   },
   (error) => {
+    console.error('API Error:', error.response?.status, error.response?.data, error.config?.url)
+    
     // Handle common errors
     if (error.response?.status === 401) {
       // Unauthorized - clear auth and redirect to login
+      console.error('Unauthorized - clearing auth token')
       localStorage.removeItem('auth-storage')
       window.location.href = '/'
     }

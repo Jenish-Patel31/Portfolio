@@ -343,8 +343,292 @@ router.get('/skills', async (req, res) => {
   }
 });
 
+// @route   POST /api/portfolio/skills
+// @desc    Create new skill
+// @access  Private (Admin only)
+router.post('/skills', auth, adminOnly, validate(portfolioSchemas.skill), async (req, res) => {
+  try {
+    console.log('Received skill data:', req.body);
+    const { category, skills } = req.body;
+    
+    // Find or create the category
+    let skillCategory = await Skill.findOne({ category });
+    
+    if (!skillCategory) {
+      // Create new category with the skill
+      skillCategory = new Skill({ category, skills });
+    } else {
+      // Add skill to existing category
+      skillCategory.skills.push(...skills);
+    }
+    
+    await skillCategory.save();
+
+    const updatedSkills = await Skill.find({ isActive: true }).sort({ order: 1 });
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Skill created successfully',
+      data: updatedSkills
+    });
+  } catch (error) {
+    console.error('Skill creation error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
+});
+
+// @route   PUT /api/portfolio/skills/:categoryId/skills/:skillId
+// @desc    Update individual skill
+// @access  Private (Admin only)
+router.put('/skills/:categoryId/skills/:skillId', auth, adminOnly, async (req, res) => {
+  try {
+    const { categoryId, skillId } = req.params;
+    const updateData = req.body;
+    
+    // Validate the update data
+    if (updateData.proficiency !== undefined && (updateData.proficiency < 0 || updateData.proficiency > 100)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Proficiency must be between 0 and 100'
+      });
+    }
+    
+    if (updateData.yearsOfExperience !== undefined && updateData.yearsOfExperience < 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Years of experience cannot be negative'
+      });
+    }
+    
+    const skillCategory = await Skill.findById(categoryId);
+    if (!skillCategory) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Skill category not found'
+      });
+    }
+    
+    const skillIndex = skillCategory.skills.findIndex(skill => skill._id.toString() === skillId);
+    if (skillIndex === -1) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Skill not found'
+      });
+    }
+    
+    // Update the skill
+    skillCategory.skills[skillIndex] = { ...skillCategory.skills[skillIndex], ...updateData };
+    await skillCategory.save();
+
+    const updatedSkills = await Skill.find({ isActive: true }).sort({ order: 1 });
+
+    res.json({
+      status: 'success',
+      message: 'Skill updated successfully',
+      data: updatedSkills
+    });
+  } catch (error) {
+    console.error('Skill update error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
+});
+
+// @route   DELETE /api/portfolio/skills/:categoryId/skills/:skillId
+// @desc    Delete individual skill
+// @access  Private (Admin only)
+router.delete('/skills/:categoryId/skills/:skillId', auth, adminOnly, async (req, res) => {
+  try {
+    const { categoryId, skillId } = req.params;
+    
+    const skillCategory = await Skill.findById(categoryId);
+    if (!skillCategory) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Skill category not found'
+      });
+    }
+    
+    const skillIndex = skillCategory.skills.findIndex(skill => skill._id.toString() === skillId);
+    if (skillIndex === -1) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Skill not found'
+      });
+    }
+    
+    // Remove the skill
+    skillCategory.skills.splice(skillIndex, 1);
+    await skillCategory.save();
+
+    const updatedSkills = await Skill.find({ isActive: true }).sort({ order: 1 });
+
+    res.json({
+      status: 'success',
+      message: 'Skill deleted successfully',
+      data: updatedSkills
+    });
+  } catch (error) {
+    console.error('Skill deletion error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
+});
+
+// @route   POST /api/portfolio/skills/categories
+// @desc    Create new skill category
+// @access  Private (Admin only)
+router.post('/skills/categories', auth, adminOnly, async (req, res) => {
+  try {
+    const { category, description, order } = req.body;
+    
+    // Validate category name
+    if (!category || typeof category !== 'string' || category.trim().length === 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Category name is required'
+      });
+    }
+    
+    // Check if category already exists
+    const existingCategory = await Skill.findOne({ category: category.toLowerCase() });
+    if (existingCategory) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Category already exists'
+      });
+    }
+    
+    // Create new category
+    const newCategory = new Skill({
+      category: category.toLowerCase(),
+      description: description || '',
+      skills: [],
+      order: order || 0,
+      isActive: true
+    });
+    
+    await newCategory.save();
+
+    const updatedSkills = await Skill.find({ isActive: true }).sort({ order: 1 });
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Category created successfully',
+      data: updatedSkills
+    });
+  } catch (error) {
+    console.error('Category creation error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
+});
+
+// @route   PUT /api/portfolio/skills/categories/:categoryId
+// @desc    Update skill category
+// @access  Private (Admin only)
+router.put('/skills/categories/:categoryId', auth, adminOnly, async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { category, description, order, isActive } = req.body;
+    
+    const skillCategory = await Skill.findById(categoryId);
+    if (!skillCategory) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Category not found'
+      });
+    }
+    
+    // Check if new category name conflicts with existing categories
+    if (category && category !== skillCategory.category) {
+      const existingCategory = await Skill.findOne({ 
+        category: category.toLowerCase(),
+        _id: { $ne: categoryId }
+      });
+      if (existingCategory) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Category name already exists'
+        });
+      }
+      skillCategory.category = category.toLowerCase();
+    }
+    
+    if (description !== undefined) skillCategory.description = description;
+    if (order !== undefined) skillCategory.order = order;
+    if (isActive !== undefined) skillCategory.isActive = isActive;
+    
+    await skillCategory.save();
+
+    const updatedSkills = await Skill.find({ isActive: true }).sort({ order: 1 });
+
+    res.json({
+      status: 'success',
+      message: 'Category updated successfully',
+      data: updatedSkills
+    });
+  } catch (error) {
+    console.error('Category update error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
+});
+
+// @route   DELETE /api/portfolio/skills/categories/:categoryId
+// @desc    Delete skill category (only if empty)
+// @access  Private (Admin only)
+router.delete('/skills/categories/:categoryId', auth, adminOnly, async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    
+    const skillCategory = await Skill.findById(categoryId);
+    if (!skillCategory) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Category not found'
+      });
+    }
+    
+    // Check if category has skills
+    if (skillCategory.skills && skillCategory.skills.length > 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Cannot delete category with existing skills. Please delete all skills first.'
+      });
+    }
+    
+    await Skill.findByIdAndDelete(categoryId);
+
+    const updatedSkills = await Skill.find({ isActive: true }).sort({ order: 1 });
+
+    res.json({
+      status: 'success',
+      message: 'Category deleted successfully',
+      data: updatedSkills
+    });
+  } catch (error) {
+    console.error('Category deletion error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Internal server error'
+    });
+  }
+});
+
 // @route   PUT /api/portfolio/skills
-// @desc    Update skills
+// @desc    Update skills (bulk)
 // @access  Private (Admin only)
 router.put('/skills', auth, adminOnly, async (req, res) => {
   try {

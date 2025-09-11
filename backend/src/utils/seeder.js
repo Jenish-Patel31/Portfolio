@@ -137,41 +137,41 @@ const sampleData = {
     {
       category: "languages",
       skills: [
-  { name: "C++", color: "#f97316" },
-  { name: "Python", color: "#3b82f6" },
-  { name: "Java", color: "#ef4444" },
-  { name: "JavaScript", color: "#facc15" },
-  { name: "Go", color: "#06b6d4" }
+        { name: "C++", proficiency: 85, color: "#f97316" },
+        { name: "Python", proficiency: 90, color: "#3b82f6" },
+        { name: "Java", proficiency: 80, color: "#ef4444" },
+        { name: "JavaScript", proficiency: 95, color: "#facc15" },
+        { name: "Go", proficiency: 70, color: "#06b6d4" }
       ],
       order: 1
     },
     {
       category: "frontend",
       skills: [
-  { name: "React.js", color: "#3b82f6" },
-  { name: "HTML/CSS", color: "#f97316" },
-  { name: "Tailwind CSS", color: "#06b6d4" },
-  { name: "Framer Motion", color: "#8b5cf6" }
+        { name: "React.js", proficiency: 95, color: "#3b82f6" },
+        { name: "HTML/CSS", proficiency: 95, color: "#f97316" },
+        { name: "Tailwind CSS", proficiency: 90, color: "#06b6d4" },
+        { name: "Framer Motion", proficiency: 85, color: "#8b5cf6" }
       ],
       order: 2
     },
     {
       category: "backend",
       skills: [
-  { name: "Node.js", color: "#10b981" },
-  { name: "Express.js", color: "#10b981" },
-  { name: "REST API", color: "#3b82f6" },
-  { name: "MongoDB", color: "#10b981" },
-  { name: "MySQL", color: "#3b82f6" }
+        { name: "Node.js", proficiency: 90, color: "#10b981" },
+        { name: "Express.js", proficiency: 90, color: "#10b981" },
+        { name: "REST API", proficiency: 95, color: "#3b82f6" },
+        { name: "MongoDB", proficiency: 85, color: "#10b981" },
+        { name: "MySQL", proficiency: 80, color: "#3b82f6" }
       ],
       order: 3
     },
     {
       category: "devops",
       skills: [
-  { name: "Docker", color: "#3b82f6" },
-  { name: "Jenkins", color: "#f97316" },
-  { name: "CI/CD", color: "#10b981" },
+        { name: "Docker", proficiency: 90, color: "#3b82f6" },
+        { name: "Jenkins", proficiency: 85, color: "#f97316" },
+        { name: "CI/CD", proficiency: 90, color: "#10b981" },
         { name: "Linux", proficiency: 85, color: "#facc15" },
         { name: "AWS", proficiency: 80, color: "#f97316" },
         { name: "Kubernetes", proficiency: 75, color: "#3b82f6" }

@@ -148,13 +148,13 @@ const LoginModal = () => {
               </button>
 
               {/* Demo Credentials */}
-              <div className="text-center p-4 bg-bg-secondary rounded-lg">
+              {/* <div className="text-center p-4 bg-bg-secondary rounded-lg">
                 <p className="text-sm text-text-secondary mb-2">Demo Credentials:</p>
                 <p className="text-xs text-text-secondary">
                   <strong>Username:</strong> admin<br />
                   <strong>Password:</strong> admin123
                 </p>
-              </div>
+              </div> */}
             </form>
           </motion.div>
         </motion.div>

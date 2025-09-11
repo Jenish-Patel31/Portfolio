@@ -52,7 +52,7 @@ const authSchemas = {
 
 const portfolioSchemas = {
   experience: Joi.object({
-    // _id: Joi.string().optional(),
+    _id: Joi.string().optional(),
     company: Joi.string().required().max(200).messages({
       'string.empty': 'Company name is required',
       'string.max': 'Company name cannot exceed 200 characters',
@@ -154,7 +154,7 @@ const portfolioSchemas = {
     keyContributions: Joi.array().items(Joi.string().max(300)).optional(),
     teamSize: Joi.number().min(1).optional(),
     impact: Joi.string().max(500).optional(),
-  skills: Joi.array().items(Joi.string()).optional()
+    skills: Joi.array().items(Joi.string()).optional()
   }),
   hero: Joi.object({
     name: Joi.string().required().max(100).messages({
@@ -204,16 +204,46 @@ const portfolioSchemas = {
       'string.max': 'Summary cannot exceed 500 characters',
       'any.required': 'Project summary is required'
     }),
-  technologies: Joi.array().items(Joi.string().max(50)).optional(),
-  image: Joi.string().uri().allow('').optional(),
-  liveUrl: Joi.string().uri().allow('').optional(),
-  githubUrl: Joi.string().uri().allow('').optional(),
-  featured: Joi.boolean().optional(),
-  order: Joi.number().integer().min(0).optional(),
-  category: Joi.string().valid('web', 'mobile', 'ai', 'blockchain', 'devops', 'other').optional(),
-  teamSize: Joi.number().integer().min(1).optional(),
-  duration: Joi.string().max(100).optional(),
-  achievements: Joi.array().items(Joi.string().max(200)).optional()
+    technologies: Joi.array().items(Joi.string().max(50)).optional(),
+    image: Joi.string().uri().allow('').optional(),
+    liveUrl: Joi.string().uri().allow('').optional(),
+    githubUrl: Joi.string().uri().allow('').optional(),
+    featured: Joi.boolean().optional(),
+    order: Joi.number().integer().min(0).optional(),
+    category: Joi.string().valid('web', 'mobile', 'ai', 'blockchain', 'devops', 'other').optional(),
+    teamSize: Joi.number().integer().min(1).optional(),
+    duration: Joi.string().max(100).optional(),
+    achievements: Joi.array().items(Joi.string().max(200)).optional()
+  }),
+  
+  skill: Joi.object({
+    _id: Joi.string().optional(),
+    category: Joi.string().required().valid('frontend', 'backend', 'devops', 'tools', 'languages', 'databases', 'cloud', 'ai', 'blockchain', 'emerging').messages({
+      'string.empty': 'Skill category is required',
+      'any.required': 'Skill category is required',
+      'any.only': 'Invalid skill category'
+    }),
+    skills: Joi.array().items(Joi.object({
+      name: Joi.string().required().max(100).messages({
+        'string.empty': 'Skill name is required',
+        'string.max': 'Skill name cannot exceed 100 characters',
+        'any.required': 'Skill name is required'
+      }),
+      icon: Joi.string().max(50).optional(),
+      color: Joi.string().max(20).optional(),
+      proficiency: Joi.number().required().min(0).max(100).messages({
+        'number.min': 'Proficiency cannot be less than 0',
+        'number.max': 'Proficiency cannot be more than 100',
+        'any.required': 'Skill proficiency level is required'
+      }),
+      yearsOfExperience: Joi.number().min(0).optional(),
+      isActive: Joi.boolean().optional()
+    })).required().min(1).messages({
+      'array.min': 'At least one skill is required',
+      'any.required': 'Skills array is required'
+    }),
+    order: Joi.number().integer().min(0).optional(),
+    isActive: Joi.boolean().optional()
   })
 };
 

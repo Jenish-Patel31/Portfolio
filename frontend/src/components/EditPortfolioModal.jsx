@@ -47,6 +47,9 @@ const EditPortfolioModal = () => {
     addSkill,
     updateSkill,
     deleteSkill,
+    addCategory,
+    updateCategory,
+    deleteCategory,
     addEducation,
     updateEducation,
     deleteEducation,
@@ -101,8 +104,16 @@ const EditPortfolioModal = () => {
       itemData.skills = itemData.skills.join(', ')
     }
     
+    // For skills, we need to handle the nested structure
+    if (type === 'skill') {
+      // item is an individual skill from the skills array
+      setEditingItem({ ...item, type, categoryId: item.categoryId })
+      setFormData(itemData)
+    } else {
     setEditingItem({ ...item, type })
-    setFormData(itemData)
+      setFormData(itemData)
+    }
+    
     setIsEditing(true)
   }
 
@@ -146,6 +157,15 @@ const EditPortfolioModal = () => {
       if (!data.organization?.trim()) errors.push('Organization name is required')
       if (!data.description?.trim()) errors.push('Role description is required')
       if (!data.startDate) errors.push('Start date is required')
+    } else if (type === 'skill') {
+      if (!data.name?.trim()) errors.push('Skill name is required')
+      if (!data.category?.trim()) errors.push('Skill category is required')
+      if (data.proficiency === undefined || data.proficiency === null) errors.push('Proficiency level is required')
+      if (data.proficiency < 0 || data.proficiency > 100) errors.push('Proficiency must be between 0 and 100')
+    } else if (type === 'category') {
+      if (!data.category?.trim()) errors.push('Category name is required')
+      if (data.category && data.category.length < 2) errors.push('Category name must be at least 2 characters')
+      if (data.category && data.category.length > 50) errors.push('Category name cannot exceed 50 characters')
     }
     
     // Validate URLs if they are provided
@@ -242,6 +262,24 @@ const EditPortfolioModal = () => {
         }
       }
       
+      // Handle skill data - ensure proficiency is a number
+      if (type === 'skill') {
+        if (apiData.proficiency !== undefined) {
+          apiData.proficiency = parseInt(apiData.proficiency)
+        }
+        if (apiData.yearsOfExperience !== undefined && apiData.yearsOfExperience !== '') {
+          apiData.yearsOfExperience = parseFloat(apiData.yearsOfExperience)
+        }
+        // Set default values for optional fields
+        if (apiData.isActive === undefined) {
+          apiData.isActive = true
+        }
+        // Remove _id from skill data when updating (not allowed by backend)
+        if (apiData._id) {
+          delete apiData._id
+        }
+      }
+      
       if (type === 'hero') {
         // Remove _id, isActive, createdAt, updatedAt, __v before sending to backend (not allowed by validation)
         const { _id, isActive, createdAt, updatedAt, __v, ...heroData } = apiData;
@@ -264,12 +302,26 @@ const EditPortfolioModal = () => {
           toast.success('Experience added successfully!')
         }
       } else if (type === 'skill') {
+        console.log('Saving skill:', { type, _id, categoryId: editingItem.categoryId, apiData })
         if (_id) {
-          await updateSkill(_id, apiData)
+          // For updating existing skills, we need to update the skill within its category
+          await updateSkill(editingItem.categoryId, _id, apiData)
           toast.success('Skill updated successfully!')
         } else {
+          // For adding new skills, we need to add to the appropriate category
           await addSkill(apiData)
           toast.success('Skill added successfully!')
+        }
+      } else if (type === 'category') {
+        console.log('Saving category:', { type, _id, apiData })
+        if (_id) {
+          // For updating existing categories
+          await updateCategory(_id, apiData)
+          toast.success('Category updated successfully!')
+        } else {
+          // For adding new categories
+          await addCategory(apiData)
+          toast.success('Category added successfully!')
         }
       } else if (type === 'education') {
         if (_id) {
@@ -300,6 +352,9 @@ const EditPortfolioModal = () => {
       cancelEditing()
     } catch (error) {
       console.error('Error saving:', error)
+      console.error('Error response:', error.response)
+      console.error('Error request data:', formData)
+      
       const errorMessage = error.response?.data?.message || 'Failed to save changes. Please try again.'
       toast.error(errorMessage)
       
@@ -313,13 +368,14 @@ const EditPortfolioModal = () => {
   }
 
   // Delete an item
-  const handleDelete = async (id, type) => {
+  const handleDelete = async (id, type, categoryId = null) => {
     if (!confirm('Are you sure you want to delete this item?')) return
     
     try {
       if (type === 'project') await deleteProject(id)
       else if (type === 'experience') await deleteExperience(id)
-      else if (type === 'skill') await deleteSkill(id)
+      else if (type === 'skill') await deleteSkill(categoryId, id)
+      else if (type === 'category') await deleteCategory(id)
       else if (type === 'education') await deleteEducation(id)
       else if (type === 'achievement') await deleteAchievement(id)
       else if (type === 'leadership') await deleteLeadership(id)
@@ -929,6 +985,173 @@ const EditPortfolioModal = () => {
     </div>
   )
 
+  const renderSkillForm = () => (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-text-primary mb-2">Category *</label>
+        <select
+          value={formData.category || 'frontend'}
+          onChange={(e) => handleInputChange('category', e.target.value)}
+          className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
+        >
+          {skills && skills.length > 0 ? (
+            skills.map((cat) => (
+              <option key={cat._id} value={cat.category}>
+                {cat.category.charAt(0).toUpperCase() + cat.category.slice(1)}
+              </option>
+            ))
+          ) : (
+            <>
+              <option value="frontend">Frontend</option>
+              <option value="backend">Backend</option>
+              <option value="devops">DevOps</option>
+              <option value="tools">Tools</option>
+              <option value="languages">Languages</option>
+              <option value="databases">Databases</option>
+              <option value="cloud">Cloud</option>
+              <option value="ai">AI/ML</option>
+              <option value="blockchain">Blockchain</option>
+              <option value="emerging">Emerging</option>
+            </>
+          )}
+        </select>
+        <p className="text-xs text-text-secondary mt-1">
+          Can't find your category? <button 
+            type="button"
+            onClick={() => addNewItem('category')}
+            className="text-accent-blue hover:underline"
+          >
+            Add a new category
+          </button>
+        </p>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-text-primary mb-2">Skill Name *</label>
+        <input
+          type="text"
+          value={formData.name || ''}
+          onChange={(e) => handleInputChange('name', e.target.value)}
+          className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
+          placeholder="e.g., React, Node.js, Python"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-text-primary mb-2">Proficiency Level *</label>
+        <div className="space-y-2">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={formData.proficiency || 70}
+            onChange={(e) => handleInputChange('proficiency', parseInt(e.target.value))}
+            className="w-full h-2 bg-bg-secondary rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs text-text-secondary">
+            <span>Beginner (0%)</span>
+            <span className="font-medium text-accent-blue">{formData.proficiency || 70}%</span>
+            <span>Expert (100%)</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-text-primary mb-2">Icon (Optional)</label>
+        <input
+          type="text"
+          value={formData.icon || ''}
+          onChange={(e) => handleInputChange('icon', e.target.value)}
+          className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
+          placeholder="e.g., SiReact, SiNodedotjs (Simple Icons name)"
+        />
+        <p className="text-xs text-text-secondary mt-1">Leave empty for auto-detection</p>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-text-primary mb-2">Color (Optional)</label>
+        <input
+          type="text"
+          value={formData.color || ''}
+          onChange={(e) => handleInputChange('color', e.target.value)}
+          className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
+          placeholder="e.g., #61DAFB, blue-500"
+        />
+        <p className="text-xs text-text-secondary mt-1">Leave empty for auto-detection</p>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-text-primary mb-2">Years of Experience</label>
+        <input
+          type="number"
+          min="0"
+          step="0.5"
+          value={formData.yearsOfExperience || ''}
+          onChange={(e) => handleInputChange('yearsOfExperience', parseFloat(e.target.value))}
+          className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
+          placeholder="e.g., 2.5"
+        />
+      </div>
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="isActive"
+          checked={formData.isActive !== false}
+          onChange={(e) => handleInputChange('isActive', e.target.checked)}
+          className="w-4 h-4 text-accent-blue bg-bg-secondary border-border-color rounded focus:ring-accent-blue"
+        />
+        <label htmlFor="isActive" className="text-sm text-text-primary">
+          Active Skill
+        </label>
+      </div>
+    </div>
+  )
+
+  const renderCategoryForm = () => (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-text-primary mb-2">Category Name *</label>
+        <input
+          type="text"
+          value={formData.category || ''}
+          onChange={(e) => handleInputChange('category', e.target.value)}
+          className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
+          placeholder="e.g., Mobile Development, Game Development"
+        />
+        <p className="text-xs text-text-secondary mt-1">Category name will be converted to lowercase</p>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-text-primary mb-2">Description</label>
+        <textarea
+          value={formData.description || ''}
+          onChange={(e) => handleInputChange('description', e.target.value)}
+          rows={3}
+          className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
+          placeholder="Brief description of this skill category (optional)"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-text-primary mb-2">Display Order</label>
+        <input
+          type="number"
+          min="0"
+          value={formData.order || 0}
+          onChange={(e) => handleInputChange('order', parseInt(e.target.value))}
+          className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
+          placeholder="0"
+        />
+        <p className="text-xs text-text-secondary mt-1">Lower numbers appear first</p>
+      </div>
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="isActive"
+          checked={formData.isActive !== false}
+          onChange={(e) => handleInputChange('isActive', e.target.checked)}
+          className="w-4 h-4 text-accent-blue bg-bg-secondary border-border-color rounded focus:ring-accent-blue"
+        />
+        <label htmlFor="isActive" className="text-sm text-text-primary">
+          Active Category
+        </label>
+      </div>
+    </div>
+  )
+
   const renderContentList = (items, type, renderItem) => (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -1104,6 +1327,103 @@ const EditPortfolioModal = () => {
     </div>
   )
 
+  const renderSkillItem = (skillCategory) => {
+    // Flatten all skills from all categories for display
+    const allSkills = skills && skills.length > 0 ? skills.flatMap(cat => 
+      cat.skills.map(skill => ({ ...skill, category: cat.category, categoryId: cat._id }))
+    ) : [];
+    
+    return allSkills.map((skill, index) => (
+      <div key={`${skill.categoryId}-${index}`} className="flex items-center justify-between p-4 bg-bg-secondary rounded-lg border border-border-color">
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-accent-blue to-accent-cyan rounded-lg flex items-center justify-center text-white text-xs font-bold">
+              {skill.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h4 className="font-medium text-text-primary">{skill.name}</h4>
+              <p className="text-sm text-text-secondary capitalize">{skill.category}</p>
+            </div>
+          </div>
+          <div className="mt-2">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs text-text-secondary">Proficiency</span>
+              <span className="text-xs font-medium text-accent-blue">{skill.proficiency}%</span>
+            </div>
+            <div className="w-full bg-bg-primary rounded-full h-2">
+              <div 
+                className="h-2 rounded-full bg-gradient-to-r from-accent-blue to-accent-cyan"
+                style={{ width: `${skill.proficiency}%` }}
+              />
+            </div>
+          </div>
+          {skill.yearsOfExperience && (
+            <p className="text-xs text-text-secondary mt-1">
+              {skill.yearsOfExperience} years experience
+            </p>
+          )}
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => startEditing({ ...skill, categoryId: skill.categoryId }, 'skill')}
+            className="p-2 text-accent-blue hover:bg-accent-blue/10 rounded-lg transition-colors"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDelete(skill._id, 'skill', skill.categoryId)}
+            className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    ));
+  }
+
+  const renderCategoryItem = (category) => (
+    <div key={category._id} className="flex items-center justify-between p-4 bg-bg-secondary rounded-lg border border-border-color">
+      <div className="flex-1">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-br from-accent-green to-accent-cyan rounded-lg flex items-center justify-center text-white text-xs font-bold">
+            {category.category.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h4 className="font-medium text-text-primary capitalize">{category.category}</h4>
+            <p className="text-sm text-text-secondary">
+              {category.skills ? category.skills.length : 0} skills
+            </p>
+          </div>
+        </div>
+        {category.description && (
+          <p className="text-xs text-text-secondary mt-2">{category.description}</p>
+        )}
+        <div className="flex items-center gap-4 mt-2 text-xs text-text-secondary">
+          <span>Order: {category.order || 0}</span>
+          <span className={`px-2 py-1 rounded-full ${
+            category.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+          }`}>
+            {category.isActive ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+      </div>
+      <div className="flex items-center space-x-2">
+        <button
+          onClick={() => startEditing(category, 'category')}
+          className="p-2 text-accent-blue hover:bg-accent-blue/10 rounded-lg transition-colors"
+        >
+          <Edit className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => handleDelete(category._id, 'category')}
+          className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <AnimatePresence>
       {isEditResumeModalOpen && (
@@ -1200,6 +1520,8 @@ const EditPortfolioModal = () => {
                     {editingItem.type === 'education' && renderEducationForm()}
                     {editingItem.type === 'achievement' && renderAchievementForm()}
                     {editingItem.type === 'leadership' && renderLeadershipForm()}
+                    {editingItem.type === 'skill' && renderSkillForm()}
+                    {editingItem.type === 'category' && renderCategoryForm()}
                   </div>
                 ) : (
                   // Content Display
@@ -1231,7 +1553,67 @@ const EditPortfolioModal = () => {
                     {activeTab === 'education' && renderContentList(education, 'education', renderEducationItem)}
                     {activeTab === 'achievements' && renderContentList(achievements, 'achievements', renderAchievementItem)}
                     {activeTab === 'leadership' && renderContentList(leadership, 'leadership', renderLeadershipItem)}
-                    {activeTab === 'skills' && <div className="text-center py-8 text-text-secondary">Skills management coming soon...</div>}
+                    {activeTab === 'skills' && (
+                      <div className="space-y-6">
+                        {/* Categories Section */}
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-semibold text-text-primary">Categories</h3>
+                            <button
+                              onClick={() => addNewItem('category')}
+                              className="flex items-center space-x-2 px-4 py-2 bg-accent-green text-white rounded-lg hover:bg-accent-green/90 transition-colors"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span>Add New Category</span>
+                            </button>
+                          </div>
+                          
+                          {isLoading.skills ? (
+                            <div className="text-center py-8">
+                              <div className="w-8 h-8 border-2 border-accent-green border-t-transparent rounded-full animate-spin mx-auto"></div>
+                              <p className="text-text-secondary mt-2">Loading categories...</p>
+                            </div>
+                          ) : skills && skills.length > 0 ? (
+                            <div className="space-y-3">
+                              {skills.map((category) => renderCategoryItem(category))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-text-secondary">
+                              <p>No categories found. Click "Add New Category" to create one.</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Skills Section */}
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-semibold text-text-primary">Skills</h3>
+                            <button
+                              onClick={() => addNewItem('skill')}
+                              className="flex items-center space-x-2 px-4 py-2 bg-accent-blue text-white rounded-lg hover:bg-accent-blue/90 transition-colors"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span>Add New Skill</span>
+                            </button>
+                          </div>
+                          
+                          {isLoading.skills ? (
+                            <div className="text-center py-8">
+                              <div className="w-8 h-8 border-2 border-accent-blue border-t-transparent rounded-full animate-spin mx-auto"></div>
+                              <p className="text-text-secondary mt-2">Loading skills...</p>
+                            </div>
+                          ) : skills && skills.length > 0 ? (
+                            <div className="space-y-3">
+                              {renderSkillItem()}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-text-secondary">
+                              <p>No skills found. Click "Add New Skill" to create one.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

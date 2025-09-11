@@ -11,6 +11,8 @@ import {
   FileText,
   LogOut,
   Edit,
+  Users,
+  Trophy,
 } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import { useModalStore } from '../stores/modalStore';
@@ -21,9 +23,9 @@ const NAV_LINKS = [
   { label: 'Experience', section: 'experience', icon: <User size={22} /> },
   { label: 'Skills', section: 'skills', icon: <Star size={22} /> },
   { label: 'Education', section: 'education', icon: <BookOpen size={22} /> },
-  { label: 'Achievements', section: 'achievements', icon: <Award size={22} /> },
-  { label: 'Leadership', section: 'leadership', icon: <Award size={22} /> },
-  { label: 'Resume/CV', to: '/resume.pdf', icon: <FileText size={22} />, external: true },
+  { label: 'Achievements', section: 'achievements', icon: <Trophy size={22} /> },
+  { label: 'Leadership', section: 'leadership', icon: <Users size={22} /> },
+  { label: 'Resume/CV', to: 'https://drive.google.com/file/d/1LZZVVDCw8Pv5J1b14ZDtIIQDrpcyy8Aw/view?usp=drive_link', icon: <FileText size={22} />, external: true },
 ];
 
 const SidebarNavbar = () => {
@@ -51,7 +53,7 @@ const SidebarNavbar = () => {
               href={link.to}
               target="_blank"
               rel="noopener noreferrer"
-              className={`group flex items-center gap-3 px-2 py-2 rounded-xl transition-all ${isActive ? 'bg-[rgba(127,85,255,0.18)] text-white' : 'text-[#bdbdfc] hover:bg-[rgba(127,85,255,0.10)] hover:text-white'}`}
+              className={`group flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-300 ease-in-out w-full ${isActive ? 'bg-[rgba(127,85,255,0.18)] text-white' : 'text-[#bdbdfc] hover:bg-[rgba(127,85,255,0.10)] hover:text-white'}`}
               aria-label={link.label}
             >
               {link.icon}
@@ -60,7 +62,7 @@ const SidebarNavbar = () => {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.18 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
                   className="ml-3 whitespace-nowrap text-base font-semibold bg-[#23234a] px-3 py-1 rounded-lg shadow-lg hidden group-hover:inline-block"
                 >
                   {link.label}
@@ -73,7 +75,7 @@ const SidebarNavbar = () => {
             <button
               key={link.label}
               onClick={() => scrollToSection(link.section)}
-              className={`group flex items-center gap-3 px-2 py-2 rounded-xl transition-all w-full ${isActive ? 'bg-[rgba(127,85,255,0.18)] text-white' : 'text-[#bdbdfc] hover:bg-[rgba(127,85,255,0.10)] hover:text-white'}`}
+              className={`group flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-300 ease-in-out w-full ${isActive ? 'bg-[rgba(127,85,255,0.18)] text-white' : 'text-[#bdbdfc] hover:bg-[rgba(127,85,255,0.10)] hover:text-white'}`}
               aria-label={link.label}
             >
               {link.icon}
@@ -82,7 +84,7 @@ const SidebarNavbar = () => {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.18 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
                   className="ml-3 whitespace-nowrap text-base font-semibold bg-[#23234a] px-3 py-1 rounded-lg shadow-lg hidden group-hover:inline-block"
                 >
                   {link.label}
@@ -99,7 +101,7 @@ const SidebarNavbar = () => {
           <>
             <button
               onClick={openEditResumeModal}
-              className="group flex items-center gap-3 px-2 py-2 rounded-xl transition-all w-full text-[#bdbdfc] hover:bg-[rgba(127,85,255,0.10)] hover:text-white"
+              className="group flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-300 ease-in-out w-full text-[#bdbdfc] hover:bg-[rgba(127,85,255,0.10)] hover:text-white"
               aria-label="Edit Portfolio"
             >
               <Edit size={22} />
@@ -107,7 +109,7 @@ const SidebarNavbar = () => {
             </button>
             <button
               onClick={logout}
-              className="group flex items-center gap-3 px-2 py-2 rounded-xl transition-all w-full text-[#bdbdfc] hover:bg-[rgba(127,85,255,0.10)] hover:text-white"
+              className="group flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-300 ease-in-out w-full text-[#bdbdfc] hover:bg-[rgba(127,85,255,0.10)] hover:text-white"
               aria-label="Logout"
             >
               <LogOut size={22} />
@@ -117,7 +119,7 @@ const SidebarNavbar = () => {
         ) : (
           <button
             onClick={openLoginModal}
-            className="group flex items-center gap-3 px-2 py-2 rounded-xl transition-all w-full text-[#bdbdfc] hover:bg-[rgba(127,85,255,0.10)] hover:text-white"
+            className="group flex items-center gap-3 px-2 py-2 rounded-xl transition-all duration-300 ease-in-out w-full text-[#bdbdfc] hover:bg-[rgba(127,85,255,0.10)] hover:text-white"
             aria-label="Admin Login"
           >
             <User size={22} />

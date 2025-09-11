@@ -247,32 +247,86 @@ export const usePortfolioStore = create((set, get) => ({
   // Skills methods
   addSkill: async (skillData) => {
     try {
-      const response = await api.post('/portfolio/skills', skillData)
-      set({ skills: [...get().skills, response.data.data] })
+      // Remove category from individual skill data as it's not allowed in validation
+      const { category, ...skillWithoutCategory } = skillData
+      
+      // Wrap individual skill data in the expected format
+      const requestData = {
+        category: category,
+        skills: [skillWithoutCategory] // Wrap the skill in an array without category
+      }
+      console.log('Adding skill with data:', requestData)
+      const response = await api.post('/portfolio/skills', requestData)
+      // Refresh skills data to get updated structure
+      await get().fetchSkills()
       return { success: true, skill: response.data.data }
     } catch (error) {
+      console.error('Error adding skill:', error)
       throw error
     }
   },
 
-  updateSkill: async (id, skillData) => {
+  updateSkill: async (categoryId, skillId, skillData) => {
     try {
-      const response = await api.put(`/portfolio/skills/${id}`, skillData)
-      const updatedSkills = get().skills.map(skill => 
-        skill._id === id ? response.data.data : skill
-      )
-      set({ skills: updatedSkills })
+      // Remove category from skill data as it's not allowed in individual skill updates
+      const { category, ...skillWithoutCategory } = skillData
+      
+      console.log('Updating skill:', { categoryId, skillId, skillData: skillWithoutCategory })
+      const response = await api.put(`/portfolio/skills/${categoryId}/skills/${skillId}`, skillWithoutCategory)
+      console.log('Skill update response:', response.data)
+      // Refresh skills data to get updated structure
+      await get().fetchSkills()
+      return { success: true }
+    } catch (error) {
+      console.error('Error updating skill:', error)
+      throw error
+    }
+  },
+
+  deleteSkill: async (categoryId, skillId) => {
+    try {
+      await api.delete(`/portfolio/skills/${categoryId}/skills/${skillId}`)
+      // Refresh skills data to get updated structure
+      await get().fetchSkills()
       return { success: true }
     } catch (error) {
       throw error
     }
   },
 
-  deleteSkill: async (id) => {
+  // Category management methods
+  addCategory: async (categoryData) => {
     try {
-      await api.delete(`/portfolio/skills/${id}`)
-      const filteredSkills = get().skills.filter(skill => skill._id !== id)
-      set({ skills: filteredSkills })
+      console.log('Adding category with data:', categoryData)
+      const response = await api.post('/portfolio/skills/categories', categoryData)
+      // Refresh skills data to get updated structure
+      await get().fetchSkills()
+      return { success: true, category: response.data.data }
+    } catch (error) {
+      console.error('Error adding category:', error)
+      throw error
+    }
+  },
+
+  updateCategory: async (categoryId, categoryData) => {
+    try {
+      console.log('Updating category:', { categoryId, categoryData })
+      const response = await api.put(`/portfolio/skills/categories/${categoryId}`, categoryData)
+      console.log('Category update response:', response.data)
+      // Refresh skills data to get updated structure
+      await get().fetchSkills()
+      return { success: true }
+    } catch (error) {
+      console.error('Error updating category:', error)
+      throw error
+    }
+  },
+
+  deleteCategory: async (categoryId) => {
+    try {
+      await api.delete(`/portfolio/skills/categories/${categoryId}`)
+      // Refresh skills data to get updated structure
+      await get().fetchSkills()
       return { success: true }
     } catch (error) {
       throw error
