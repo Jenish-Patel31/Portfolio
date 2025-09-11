@@ -35,33 +35,48 @@ app.use('/api/', limiter);
 const corsOptions = {
   origin: function (origin, callback) {
     console.log('CORS request from origin:', origin);
+    
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    // In production, allow your frontend domain
-    if (process.env.NODE_ENV === 'production') {
-      const allowedOrigins = [
-        'https://portfolio-swart-gamma-28.vercel.app', // Your Vercel deployment
-        'http://localhost:3000', // For local development
-        'https://localhost:3000' // For local HTTPS development
-      ];
-      
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-    } else {
-      // In development, allow localhost
-      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-        return callback(null, true);
-      }
+    // Always allow Vercel deployments (they can have dynamic subdomains)
+    if (origin.includes('vercel.app') || origin.includes('vercel.com')) {
+      return callback(null, true);
     }
     
+    // Allow localhost for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
+    
+    // Allow your specific Vercel domain
+    if (origin === 'https://portfolio-swart-gamma-28.vercel.app') {
+      return callback(null, true);
+    }
+    
+    console.log('CORS blocked origin:', origin);
     callback(new Error('Not allowed by CORS'));
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 
+// Apply CORS with fallback
 app.use(cors(corsOptions));
+
+// Fallback CORS for any missed requests
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 // Logging middleware
 app.use(morgan('combined'));
