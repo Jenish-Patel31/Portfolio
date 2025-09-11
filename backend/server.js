@@ -50,7 +50,7 @@ const corsOptions = {
     }
     
     // Allow your specific Vercel domain
-    if (origin === 'https://portfolio-swart-gamma-28.vercel.app') {
+    if (origin === 'https://jenish-patel31.vercel.app') {
       return callback(null, true);
     }
     
