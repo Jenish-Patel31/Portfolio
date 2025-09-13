@@ -1,24 +1,32 @@
-import { useEffect } from 'react'
+import { useEffect, useState, memo } from 'react'
 import { useTypewriter } from '../hooks/useTypewriter'
 import { motion } from 'framer-motion'
-import { Github, Linkedin, Mail, Phone, MapPin, ExternalLink, Download } from 'lucide-react'
+import { Github, Linkedin, Mail, Phone, MapPin, ExternalLink, ArrowRight, Download, MessageCircle } from 'lucide-react'
 import { usePortfolioStore } from '../stores/portfolioStore'
+import { useLoadingStore } from '../stores/loadingStore'
 
 const HeroSection = () => {
-  const { hero, fetchHero, isLoading, errors } = usePortfolioStore()
+  const { hero, projects, fetchHero, isLoading, errors } = usePortfolioStore()
+  const { isGlobalLoading } = useLoadingStore()
+  const [isVisible, setIsVisible] = useState(false)
 
-  useEffect(() => {
-    console.log('HeroSection: useEffect triggered, fetching hero data')
-    fetchHero()
-  }, [fetchHero])
+  // Data is fetched by App.jsx fetchAllData, no need to fetch here
+  // useEffect(() => {
+  //   console.log('HeroSection: useEffect triggered, fetching hero data')
+  //   fetchHero()
+  // }, [])
 
   // Always call useTypewriter, even if hero is missing
   const animatedTitle = useTypewriter(hero && hero.title ? hero.title : '', 40, 400);
 
-  console.log('HeroSection render:', { hero, isLoading: isLoading.hero, errors: errors.hero })
+  // Trigger visibility animation
+  useEffect(() => {
+    setIsVisible(true)
+  }, [])
+
+
 
   if (isLoading.hero) {
-    console.log('HeroSection: Showing loading state')
     return (
       <section id="home" className="min-h-screen flex items-center justify-center pt-16">
         <div className="animate-pulse">
@@ -30,8 +38,7 @@ const HeroSection = () => {
     )
   }
 
-  if (errors.hero) {
-    console.log('HeroSection: Showing error state:', errors.hero)
+  if (errors.hero && !isGlobalLoading) {
     return (
       <section id="home" className="min-h-screen flex items-center justify-center pt-16">
         <div className="text-center text-red-400">
@@ -48,7 +55,6 @@ const HeroSection = () => {
   }
 
   if (!hero) {
-    console.log('HeroSection: Hero data is null or undefined:', hero)
     return (
       <section id="home" className="min-h-screen flex items-center justify-center pt-16">
         <div className="text-center text-text-secondary">
@@ -65,7 +71,6 @@ const HeroSection = () => {
     )
   }
 
-  console.log('HeroSection: Rendering with hero data:', hero)
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -89,148 +94,192 @@ const HeroSection = () => {
     }
   }
   return (
-  <section id="home" className="min-h-screen flex items-center justify-center pt-16 relative overflow-hidden px-4">
-      {/* Background Elements removed for cleaner look */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+    <section id="home" className="min-h-screen flex items-center justify-center pt-16 relative px-4">
+      {/* Subtle Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Subtle gradient orbs */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent-blue/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent-cyan/5 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="text-center space-y-6"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-center space-y-6 sm:space-y-6 lg:space-y-8"
         >
-          {/* Name */}
-          <motion.h1
-            variants={itemVariants}
-            className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-text-primary mb-4"
+          {/* Name with subtle gradient */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
           >
-            {hero.name}
-          </motion.h1>
+            <h1 className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-text-primary mb-3 sm:mb-4">
+              <span className="bg-gradient-to-r from-accent-blue via-accent-cyan to-accent-green bg-clip-text text-transparent">
+                {hero.name}
+              </span>
+            </h1>
+          </motion.div>
+
           {/* Animated Title */}
-          <motion.h2
-            variants={itemVariants}
-            className="text-xl sm:text-2xl md:text-3xl font-semibold text-accent-blue mb-6"
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
           >
-            {animatedTitle}
-          </motion.h2>
+            <h2 className="text-xl sm:text-xl md:text-2xl lg:text-3xl font-semibold text-accent-blue mb-4 sm:mb-4 lg:mb-6">
+              {animatedTitle}
+            </h2>
+          </motion.div>
+
           {/* Summary */}
           <motion.p
-            variants={itemVariants}
-            className="max-w-2xl mx-auto text-text-secondary text-base md:text-lg mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="max-w-3xl mx-auto text-text-secondary text-lg sm:text-lg md:text-xl mb-6 sm:mb-6 lg:mb-8 leading-relaxed"
           >
             {hero.summary}
           </motion.p>
-          {/* Contact Info */}
+
+
+          {/* Contact Information - Mobile Optimized */}
           <motion.div
-            variants={itemVariants}
-            className="flex flex-wrap justify-center items-center gap-6 mb-8 space-x-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="flex flex-wrap justify-center items-center gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-6 lg:mb-8 text-sm sm:text-sm lg:text-base"
           >
             {hero.email && (
-              <a
-                href={`mailto:${hero.email}`}
-                className="flex items-center gap-2 text-text-secondary hover:text-accent-blue underline"
+              <motion.a
+                href={`https://mail.google.com/mail/?view=cm&fs=1&to=${hero.email}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Email"
+                className="flex items-center gap-2 sm:gap-2 text-text-secondary hover:text-accent-blue transition-colors duration-200 group"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Mail className="w-5 h-5" />
-                {hero.email}
-              </a>
+                <div className="p-2 sm:p-2 bg-accent-blue/10 rounded-lg sm:rounded-lg group-hover:bg-accent-blue/20 transition-colors">
+                  <Mail className="w-4 h-4 sm:w-4 sm:h-4 text-accent-blue" />
+                </div>
+                <span>Email</span>
+              </motion.a>
             )}
+
             {hero.phone && (
-              <a
-                href={`tel:${hero.phone}`}
-                className="flex items-center gap-2 text-text-secondary hover:text-accent-blue underline"
+              <motion.a
+                href={`https://wa.me/${hero.phone.replace(/[^\d]/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Phone"
+                className="flex items-center gap-2 sm:gap-2 text-text-secondary hover:text-green-500 transition-colors duration-200 group"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Phone className="w-5 h-5" />
-                {hero.phone}
-              </a>
+                <div className="p-2 sm:p-2 bg-green-500/10 rounded-lg sm:rounded-lg group-hover:bg-green-500/20 transition-colors">
+                  <MessageCircle className="w-4 h-4 sm:w-4 sm:h-4 text-green-500" />
+                </div>
+                <span>WhatsApp</span>
+              </motion.a>
             )}
+
             {hero.location && (
-              <span className="flex items-center gap-2 text-text-secondary">
-                <MapPin className="w-5 h-5" />
-                {hero.location}
-              </span>
+              <motion.div
+                className="flex items-center gap-2 sm:gap-2 text-text-secondary group"
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="p-2 sm:p-2 bg-accent-cyan/10 rounded-lg sm:rounded-lg group-hover:bg-accent-cyan/20 transition-colors">
+                  <MapPin className="w-4 h-4 sm:w-4 sm:h-4 text-accent-cyan" />
+                </div>
+                <span>{hero.location}</span>
+              </motion.div>
             )}
           </motion.div>
 
-          {/* Social Links */}
+          {/* Social Links - Mobile Optimized */}
           <motion.div 
-            variants={itemVariants}
-            className="flex justify-center items-center space-x-6 mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.0 }}
+            className="flex justify-center items-center space-x-4 sm:space-x-4 lg:space-x-6 mb-6 sm:mb-6 lg:mb-8"
           >
             {hero.socialLinks?.github && (
               <motion.a
-                whileHover={{ scale: 1.1, y: -5 }}
-                whileTap={{ scale: 0.95 }}
                 href={hero.socialLinks.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 bg-bg-card border border-border-color rounded-full flex items-center justify-center text-text-secondary hover:text-accent-blue hover:border-accent-blue transition-all duration-200"
+                className="group relative w-12 h-12 sm:w-12 sm:h-12 bg-bg-card border border-border-color rounded-xl sm:rounded-xl flex items-center justify-center text-text-secondary hover:text-accent-blue hover:border-accent-blue transition-all duration-300 hover:shadow-lg hover:shadow-accent-blue/20"
+                whileHover={{ y: -2, scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Github className="w-6 h-6" />
+                <Github className="w-6 h-6 sm:w-6 sm:h-6" />
+                <div className="absolute inset-0 bg-accent-blue/5 rounded-xl sm:rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
               </motion.a>
             )}
 
             {hero.socialLinks?.linkedin && (
               <motion.a
-                whileHover={{ scale: 1.1, y: -5 }}
-                whileTap={{ scale: 0.95 }}
                 href={hero.socialLinks.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 bg-bg-card border border-border-color rounded-full flex items-center justify-center text-text-secondary hover:text-accent-blue hover:border-accent-blue transition-all duration-200"
+                className="group relative w-12 h-12 sm:w-12 sm:h-12 bg-bg-card border border-border-color rounded-xl sm:rounded-xl flex items-center justify-center text-text-secondary hover:text-accent-blue hover:border-accent-blue transition-all duration-300 hover:shadow-lg hover:shadow-accent-blue/20"
+                whileHover={{ y: -2, scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <Linkedin className="w-6 h-6" />
+                <Linkedin className="w-6 h-6 sm:w-6 sm:h-6" />
+                <div className="absolute inset-0 bg-accent-blue/5 rounded-xl sm:rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
               </motion.a>
             )}
 
             {hero.socialLinks?.leetcode && (
               <motion.a
-                whileHover={{ scale: 1.1, y: -5 }}
-                whileTap={{ scale: 0.95 }}
                 href={hero.socialLinks.leetcode}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-12 h-12 bg-bg-card border border-border-color rounded-full flex items-center justify-center text-text-secondary hover:text-accent-green hover:border-accent-green transition-all duration-200"
+                className="group relative w-12 h-12 sm:w-12 sm:h-12 bg-bg-card border border-border-color rounded-xl sm:rounded-xl flex items-center justify-center text-text-secondary hover:text-accent-green hover:border-accent-green transition-all duration-300 hover:shadow-lg hover:shadow-accent-green/20"
+                whileHover={{ y: -2, scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <ExternalLink className="w-6 h-6" />
+                <ExternalLink className="w-6 h-6 sm:w-6 sm:h-6" />
+                <div className="absolute inset-0 bg-accent-green/5 rounded-xl sm:rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
               </motion.a>
             )}
           </motion.div>
 
-          {/* Call to Action */}
+          {/* CTA Buttons - Mobile Optimized */}
           <motion.div 
-            variants={itemVariants}
-            className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.2 }}
+            className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-4 lg:space-x-6"
           >
-            <motion.button
-              whileHover={{ scale: 1.08, boxShadow: '0 4px 24px 0 rgba(59,130,246,0.25)' }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' })}
-              className="relative text-lg px-8 py-3 rounded-lg font-semibold bg-gradient-to-r from-accent-blue via-accent-cyan to-accent-green text-white shadow-lg overflow-hidden border-0 focus:outline-none focus:ring-2 focus:ring-accent-blue/50 transition-all duration-200"
-              style={{ zIndex: 1 }}
-            >
-              <span className="relative z-10">View Projects</span>
-              <span className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-lg" />
-              <span className="absolute left-0 top-0 w-full h-1 bg-gradient-to-r from-accent-cyan to-accent-green opacity-70 animate-pulse rounded-t-lg" style={{ zIndex: 0 }} />
-            </motion.button>
+            {projects && projects.length > 0 && (
+              <motion.button
+                onClick={() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' })}
+                className="group relative px-8 sm:px-8 py-3 sm:py-3 bg-gradient-to-r from-accent-blue to-accent-cyan text-white font-semibold rounded-xl sm:rounded-xl shadow-lg hover:shadow-xl hover:shadow-accent-blue/25 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-accent-blue/50 text-base sm:text-base"
+                whileHover={{ y: -2, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span className="flex items-center space-x-1.5 sm:space-x-2">
+                  <span>View Projects</span>
+                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </motion.button>
+            )}
 
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
               onClick={() => document.getElementById('experience').scrollIntoView({ behavior: 'smooth' })}
-              className="btn-outline text-lg px-8 py-3"
+              className="group relative px-8 sm:px-8 py-3 sm:py-3 border-2 border-accent-blue text-accent-blue font-semibold rounded-xl sm:rounded-xl hover:bg-accent-blue hover:text-white transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-accent-blue/50 text-base sm:text-base"
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              View Experience
+              <span>View Experience</span>
             </motion.button>
           </motion.div>
         </motion.div>
       </div>
 
-      {/* Scroll Indicator */}
+      {/* Subtle Scroll Indicator */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -238,14 +287,15 @@ const HeroSection = () => {
         className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
       >
         <motion.div
-          animate={{ y: [0, 10, 0] }}
+          animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="w-6 h-10 border-2 border-text-secondary rounded-full flex justify-center"
+          className="w-6 h-10 border-2 border-text-secondary/50 rounded-full flex justify-center cursor-pointer hover:border-accent-blue transition-colors"
+          onClick={() => document.getElementById('projects').scrollIntoView({ behavior: 'smooth' })}
         >
           <motion.div
             animate={{ y: [0, 12, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="w-1 h-3 bg-text-secondary rounded-full mt-2"
+            className="w-1 h-3 bg-text-secondary/50 rounded-full mt-2"
           />
         </motion.div>
       </motion.div>
@@ -253,4 +303,4 @@ const HeroSection = () => {
   )
 }
 
-export default HeroSection
+export default memo(HeroSection)

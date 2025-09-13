@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, memo } from 'react'
 import { motion } from 'framer-motion'
 import { ExternalLink, Github, Users, Clock, Star } from 'lucide-react'
 import * as SI from 'react-icons/si';
@@ -63,17 +63,22 @@ const techIconMap = {
 };
 import { usePortfolioStore } from '../stores/portfolioStore'
 import { useModalStore } from '../stores/modalStore'
+import { useLoadingStore } from '../stores/loadingStore'
+// Removed ProjectsModal import - using simple page instead
+import { useState } from 'react'
 
 const ProjectsSection = () => {
   const { projects, fetchProjects, isLoading, errors } = usePortfolioStore()
-  const { openProjectModal } = useModalStore()
+  // const { openProjectModal } = useModalStore() // Modal removed, no longer needed
+  const { isGlobalLoading } = useLoadingStore()
+  const [showAllProjects, setShowAllProjects] = useState(false)
 
-  useEffect(() => {
-    console.log('ProjectsSection: useEffect triggered, fetching projects data')
-    fetchProjects()
-  }, [fetchProjects])
+  // Data is fetched by App.jsx fetchAllData, no need to fetch here
+  // useEffect(() => {
+  //   console.log('ProjectsSection: useEffect triggered, fetching projects data')
+  //   fetchProjects()
+  // }, [])
 
-  console.log('ProjectsSection render:', { projects, isLoading: isLoading.projects, errors: errors.projects })
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -110,7 +115,6 @@ const ProjectsSection = () => {
   }
 
   if (isLoading.projects) {
-    console.log('ProjectsSection: Showing loading state')
     return (
   <section id="projects" className="py-10 px-4">
         <div className="max-w-7xl mx-auto">
@@ -135,8 +139,7 @@ const ProjectsSection = () => {
     )
   }
 
-  if (errors.projects) {
-    console.log('ProjectsSection: Showing error state:', errors.projects)
+  if (errors.projects && !isGlobalLoading) {
     return (
       <section id="projects" className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
@@ -161,7 +164,6 @@ const ProjectsSection = () => {
   }
 
   if (!projects || !Array.isArray(projects) || projects.length === 0) {
-    console.log('ProjectsSection: No projects data available:', projects)
     return (
       <section id="projects" className="py-20 px-4">
         <div className="max-w-7xl mx-auto">
@@ -184,10 +186,10 @@ const ProjectsSection = () => {
     )
   }
 
-  console.log('ProjectsSection: Rendering with projects data:', projects)
 
   return (
-  <section id="projects" className="py-10 px-4">
+    <>
+    <section id="projects" className="py-10 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <motion.div
@@ -202,41 +204,59 @@ const ProjectsSection = () => {
           </h2>
         </motion.div>
 
-        {/* Projects Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-2"
-        >
-          {projects.map((project, index) => (
-            <motion.div
+        {/* Projects Grid - Show only first 3 projects */}
+        <div className="projects-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-2">
+          {(showAllProjects ? projects : projects.slice(0, 3)).map((project, index) => (
+            <div
               key={project._id}
-              variants={itemVariants}
-              whileHover={{ y: -10 }}
-              className="card group cursor-pointer m-2 relative"
-              onClick={() => openProjectModal(project)}
+              className="card group m-2 relative hover:transform hover:-translate-y-2 transition-transform duration-300"
+              // onClick={() => openProjectModal(project)} // Modal removed, no click action needed
             >
-              {/* Floating GitHub Button */}
+              {/* Modern Floating Action Button - GitHub */}
               {project.githubUrl && (
                 <a
                   href={project.githubUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="absolute top-4 right-4 z-20 flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-accent-blue to-accent-cyan text-white font-semibold shadow hover:shadow-lg hover:from-accent-cyan hover:to-accent-blue transition-all duration-200 text-xs opacity-90 hover:opacity-100"
+                  className="absolute top-4 right-4 z-20 w-12 h-12 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 text-white shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 flex items-center justify-center group border border-slate-600"
                   onClick={e => e.stopPropagation()}
                   aria-label="View on GitHub"
                 >
-                  <Github className="w-4 h-4" />
-                  GitHub
+                  <Github className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
                 </a>
               )}
-              {/* Project Image Placeholder */}
-              <div className="h-48 bg-bg-secondary rounded-lg mb-4 flex items-center justify-center">
-                <div className="text-6xl text-text-secondary/20 font-bold">
-                  {project.title.charAt(0)}
-                </div>
+              {/* Modern Floating Action Button - Live */}
+              {project.liveUrl && (
+                <a
+                  href={project.liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-4 left-4 z-20 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 flex items-center justify-center group"
+                  onClick={e => e.stopPropagation()}
+                  aria-label="View Live Demo"
+                >
+                  <ExternalLink className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                </a>
+              )}
+              {/* Project Image */}
+              <div className="h-48 bg-bg-secondary rounded-lg mb-4 overflow-hidden">
+                {project.image ? (
+                  <img
+                    src={project.image}
+                    alt={project.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      console.error('Image load error:', e.target.src)
+                      e.target.style.display = 'none'
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="text-6xl text-text-secondary/20 font-bold">
+                      {project.title.charAt(0)}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Project Info */}
@@ -300,49 +320,34 @@ const ProjectsSection = () => {
                   )}
                 </div>
 
-                {/* Action Buttons */}
+                {/* Action Buttons - GitHub button moved to floating top-right, Live button moved to floating top-left */}
                 <div className="flex items-center space-x-3 pt-2">
-                  {/* GitHub button moved to floating top-right */}
-                  
-                  {project.liveUrl && (
-                    <motion.a
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      href={project.liveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center space-x-1 text-text-secondary hover:text-accent-green transition-colors duration-200"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      <span className="text-xs">Live</span>
-                    </motion.a>
-                  )}
+                  {/* Buttons moved to floating positions above */}
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* View All Projects Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-center mt-12"
-        >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="btn-outline text-lg px-8 py-3"
+
+        {/* View More/Less Button - Fixed z-index and styling */}
+        <div className="text-center mt-12 relative z-50">
+          <button 
+            onClick={() => setShowAllProjects(!showAllProjects)}
+            className="bg-gradient-to-r from-accent-blue to-accent-cyan hover:from-accent-cyan hover:to-accent-blue text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer relative z-50"
+            style={{ zIndex: 9999 }}
           >
-            View All Projects
-          </motion.button>
-        </motion.div>
+            {showAllProjects ? 'Show Less Projects' : 'View More Projects'} 
+            <span className="ml-2 text-sm opacity-90">
+              ({showAllProjects ? `Showing ${projects.length}` : `+${Math.max(0, projects.length - 3)} more`})
+            </span>
+          </button>
+        </div>
+
       </div>
     </section>
+    </>
   )
 }
 
-export default ProjectsSection
+export default memo(ProjectsSection)

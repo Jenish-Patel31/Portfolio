@@ -85,6 +85,46 @@ const EditPortfolioModal = () => {
     setFormData(prev => ({ ...prev, [field]: arrayValue }))
   }
 
+  // Handle image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Validate file size (10MB limit for Cloudinary)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File size must be less than 10MB")
+      return
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file")
+      return
+    }
+
+    try {
+      const formData = new FormData()
+      formData.append("image", file)
+
+      const response = await api.post("/upload/image", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+
+      if (response.data.status === "success" && response.data.data) {
+        const uploadedData = response.data.data
+        handleInputChange("image", uploadedData.url)
+        toast.success("Image uploaded successfully to Cloudinary!")
+      } else {
+        toast.error("Failed to upload image")
+      }
+    } catch (error) {
+      console.error("Image upload error:", error)
+      toast.error(error.response?.data?.message || "Failed to upload image")
+    }
+  }
+
   // Start editing an item
   const startEditing = (item, type) => {
     // Prepare the item data for editing
@@ -197,6 +237,7 @@ const EditPortfolioModal = () => {
       // Prepare data for API
       const apiData = { ...formData }
       
+      
       // Convert string fields back to arrays where needed
       if (apiData.technologies && typeof apiData.technologies === 'string') {
         apiData.technologies = apiData.technologies.split(',').map(item => item.trim()).filter(item => item)
@@ -286,23 +327,26 @@ const EditPortfolioModal = () => {
         await updateHero(heroData)
         toast.success('Hero section updated successfully!')
       } else if (type === 'project') {
+        // Remove MongoDB internal fields before sending to backend
+        const { _id, isActive, createdAt, updatedAt, __v, ...projectData } = apiData;
         if (_id) {
-          await updateProject(_id, apiData)
+          await updateProject(_id, projectData)
           toast.success('Project updated successfully!')
         } else {
-          await addProject(apiData)
+          await addProject(projectData)
           toast.success('Project added successfully!')
         }
       } else if (type === 'experience') {
+        // Remove MongoDB internal fields before sending to backend
+        const { _id, isActive, createdAt, updatedAt, __v, ...experienceData } = apiData;
         if (_id) {
-          await updateExperience(_id, apiData)
+          await updateExperience(_id, experienceData)
           toast.success('Experience updated successfully!')
         } else {
-          await addExperience(apiData)
+          await addExperience(experienceData)
           toast.success('Experience added successfully!')
         }
       } else if (type === 'skill') {
-        console.log('Saving skill:', { type, _id, categoryId: editingItem.categoryId, apiData })
         if (_id) {
           // For updating existing skills, we need to update the skill within its category
           await updateSkill(editingItem.categoryId, _id, apiData)
@@ -313,7 +357,6 @@ const EditPortfolioModal = () => {
           toast.success('Skill added successfully!')
         }
       } else if (type === 'category') {
-        console.log('Saving category:', { type, _id, apiData })
         if (_id) {
           // For updating existing categories
           await updateCategory(_id, apiData)
@@ -324,27 +367,33 @@ const EditPortfolioModal = () => {
           toast.success('Category added successfully!')
         }
       } else if (type === 'education') {
+        // Remove MongoDB internal fields before sending to backend
+        const { _id, isActive, createdAt, updatedAt, __v, ...educationData } = apiData;
         if (_id) {
-          await updateEducation(_id, apiData)
+          await updateEducation(_id, educationData)
           toast.success('Education updated successfully!')
         } else {
-          await addEducation(apiData)
+          await addEducation(educationData)
           toast.success('Education added successfully!')
         }
       } else if (type === 'achievement') {
+        // Remove MongoDB internal fields before sending to backend
+        const { _id, isActive, createdAt, updatedAt, __v, ...achievementData } = apiData;
         if (_id) {
-          await updateAchievement(_id, apiData)
+          await updateAchievement(_id, achievementData)
           toast.success('Achievement updated successfully!')
         } else {
-          await addAchievement(apiData)
+          await addAchievement(achievementData)
           toast.success('Achievement added successfully!')
         }
       } else if (type === 'leadership') {
+        // Remove MongoDB internal fields before sending to backend
+        const { _id, isActive, createdAt, updatedAt, __v, ...leadershipData } = apiData;
         if (_id) {
-          await updateLeadership(_id, apiData)
+          await updateLeadership(_id, leadershipData)
           toast.success('Leadership updated successfully!')
         } else {
-          await addLeadership(apiData)
+          await addLeadership(leadershipData)
           toast.success('Leadership added successfully!')
         }
       }
@@ -360,7 +409,6 @@ const EditPortfolioModal = () => {
       
       // Log detailed error for debugging
       if (error.response?.data) {
-        console.log('API Error Details:', error.response.data)
       }
     } finally {
       setIsSubmitting(false)
@@ -525,6 +573,58 @@ const EditPortfolioModal = () => {
         <p className="text-xs text-text-secondary mt-1">Leave empty if no live demo</p>
       </div>
       <div>
+        <label className="block text-sm font-medium text-text-primary mb-2">Project Image</label>
+        <div className="space-y-3">
+          {formData.image && (
+            <div className="relative">
+              <img
+                src={formData.image}
+                alt="Project preview"
+                className="w-full h-32 object-cover rounded-lg border border-border-color"
+                onError={(e) => {
+                  console.error('Image preview error:', e.target.src)
+                  e.target.style.display = 'none'
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => handleInputChange('image', '')}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+          <div className="flex items-center space-x-3">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="project-image-upload"
+            />
+            <label
+              htmlFor="project-image-upload"
+              className="flex items-center space-x-2 px-4 py-2 bg-accent-blue text-white rounded-lg hover:bg-accent-blue/80 transition-colors cursor-pointer"
+            >
+              <Upload className="w-4 h-4" />
+              <span>{formData.image ? 'Change Image' : 'Upload Image'}</span>
+            </label>
+            {formData.image && (
+              <button
+                type="button"
+                onClick={() => handleInputChange('image', '')}
+                className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Remove</span>
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-text-secondary">Upload a project screenshot or logo (max 5MB)</p>
+        </div>
+      </div>
+      <div>
         <label className="block text-sm font-medium text-text-primary mb-2">Category</label>
         <select
           value={formData.category || 'web'}
@@ -572,6 +672,21 @@ const EditPortfolioModal = () => {
         <label htmlFor="featured" className="text-sm text-text-primary">
           Featured Project
         </label>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-text-primary mb-2">Priority</label>
+        <input
+          type="number"
+          value={formData.priority || 999}
+          onChange={(e) => handleInputChange('priority', parseInt(e.target.value) || 999)}
+          className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
+          placeholder="999"
+          min="1"
+          max="999"
+        />
+        <p className="text-xs text-text-secondary mt-1">
+          Lower numbers = higher priority (1-3 will show in main section, 999 = default)
+        </p>
       </div>
     </div>
   )
@@ -1185,8 +1300,22 @@ const EditPortfolioModal = () => {
   const renderProjectItem = (project) => (
     <div key={project._id} className="flex items-center justify-between p-4 bg-bg-secondary rounded-lg border border-border-color">
       <div className="flex-1">
-        <h4 className="font-medium text-text-primary">{project.title}</h4>
-        <p className="text-sm text-text-secondary">{project.summary}</p>
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-text-secondary">Priority:</span>
+            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+              project.priority <= 3 
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                : project.priority <= 10 
+                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+            }`}>
+              {project.priority || 999}
+            </span>
+          </div>
+          <h4 className="font-medium text-text-primary">{project.title}</h4>
+        </div>
+        <p className="text-sm text-text-secondary mt-1">{project.summary}</p>
         {project.category && (
           <span className="inline-block px-2 py-1 bg-accent-blue/20 text-accent-blue text-xs rounded-full mt-1">
             {project.category}
@@ -1548,7 +1677,38 @@ const EditPortfolioModal = () => {
                       </div>
                     )}
 
-                    {activeTab === 'projects' && renderContentList(projects, 'projects', renderProjectItem)}
+                    {activeTab === 'projects' && (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <h3 className="text-lg font-semibold text-text-primary">Projects</h3>
+                            <p className="text-sm text-text-secondary">Projects are sorted by priority (1 = highest, 999 = default)</p>
+                          </div>
+                          <button
+                            onClick={() => addNewItem('projects')}
+                            className="flex items-center space-x-2 px-4 py-2 bg-accent-blue text-white rounded-lg hover:bg-accent-blue/90 transition-colors"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span>Add New Project</span>
+                          </button>
+                        </div>
+                        
+                        {isLoading.projects ? (
+                          <div className="text-center py-8">
+                            <div className="w-8 h-8 border-2 border-accent-blue border-t-transparent rounded-full animate-spin mx-auto"></div>
+                            <p className="text-text-secondary mt-2">Loading projects...</p>
+                          </div>
+                        ) : projects && projects.length > 0 ? (
+                          <div className="space-y-3">
+                            {projects.map(project => renderProjectItem(project))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-text-secondary">
+                            <p>No projects found. Add your first project!</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {activeTab === 'experience' && renderContentList(experience, 'experience', renderExperienceItem)}
                     {activeTab === 'education' && renderContentList(education, 'education', renderEducationItem)}
                     {activeTab === 'achievements' && renderContentList(achievements, 'achievements', renderAchievementItem)}

@@ -34,8 +34,6 @@ app.use('/api/', limiter);
 // CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    console.log('CORS request from origin:', origin);
-    
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
@@ -54,7 +52,10 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    console.log('CORS blocked origin:', origin);
+    // Only log blocked origins in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('CORS blocked origin:', origin);
+    }
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -78,8 +79,13 @@ app.use((req, res, next) => {
   }
 });
 
-// Logging middleware
-app.use(morgan('combined'));
+// Logging middleware - only log errors and important requests
+app.use(morgan('combined', {
+  skip: function (req, res) {
+    // Skip logging for successful GET requests to reduce spam
+    return req.method === 'GET' && res.statusCode < 400;
+  }
+}));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));

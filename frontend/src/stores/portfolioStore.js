@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import api from '../utils/api'
+import { useLoadingStore } from './loadingStore'
 
 export const usePortfolioStore = create((set, get) => ({
   // Portfolio data
@@ -27,11 +28,9 @@ export const usePortfolioStore = create((set, get) => ({
   
   // Actions
   fetchHero: async () => {
-    console.log('Fetching hero data...')
     set({ isLoading: { ...get().isLoading, hero: true } })
     try {
       const response = await api.get('/portfolio/hero')
-      console.log('Hero API response:', response.data)
       set({ 
         hero: response.data.data,
         isLoading: { ...get().isLoading, hero: false },
@@ -41,17 +40,18 @@ export const usePortfolioStore = create((set, get) => ({
       console.error('Error fetching hero:', error)
       set({ 
         isLoading: { ...get().isLoading, hero: false },
-        errors: { ...get().errors, hero: error.message }
+        errors: { ...get().errors, hero: null } // Don't store error message
       })
+      // Set backend status to error so loading overlay can handle it
+      const loadingStore = useLoadingStore.getState()
+      loadingStore.setBackendStatus('error')
     }
   },
   
   fetchProjects: async () => {
-    console.log('Fetching projects data...')
     set({ isLoading: { ...get().isLoading, projects: true } })
     try {
       const response = await api.get('/portfolio/projects')
-      console.log('Projects API response:', response.data)
       set({ 
         projects: response.data.data,
         isLoading: { ...get().isLoading, projects: false },
@@ -153,15 +153,41 @@ export const usePortfolioStore = create((set, get) => ({
   
   // Fetch all portfolio data
   fetchAllData: async () => {
-    await Promise.all([
-      get().fetchHero(),
-      get().fetchProjects(),
-      get().fetchExperience(),
-      get().fetchSkills(),
-      get().fetchEducation(),
-      get().fetchAchievements(),
-      get().fetchLeadership(),
-    ])
+    const loadingStore = useLoadingStore.getState()
+    
+    // Set global loading to true when starting to fetch data
+    loadingStore.setGlobalLoading(true, 'Loading your dynamic portfolio...')
+    
+    try {
+      // First fetch hero data and hide loading when hero is ready
+      await get().fetchHero()
+      
+      // Check if hero fetch was successful
+      const currentState = get()
+      if (currentState.hero) {
+        // Hide global loading with a small delay for smooth transition
+        setTimeout(() => {
+          loadingStore.setGlobalLoading(false)
+        }, 150) // 150ms delay for faster transition
+        
+        // Then fetch other data in background
+        Promise.all([
+          get().fetchProjects(),
+          get().fetchExperience(),
+          get().fetchSkills(),
+          get().fetchEducation(),
+          get().fetchAchievements(),
+          get().fetchLeadership(),
+        ]).catch(error => {
+          console.error('Error fetching additional portfolio data:', error)
+        })
+      }
+      // If hero fetch failed, the loading overlay will show error state
+      
+    } catch (error) {
+      console.error('Error fetching hero data:', error)
+      // Don't hide loading - let the error state show
+    }
   },
   
   // Update methods (for authenticated users)
@@ -255,7 +281,6 @@ export const usePortfolioStore = create((set, get) => ({
         category: category,
         skills: [skillWithoutCategory] // Wrap the skill in an array without category
       }
-      console.log('Adding skill with data:', requestData)
       const response = await api.post('/portfolio/skills', requestData)
       // Refresh skills data to get updated structure
       await get().fetchSkills()
@@ -271,9 +296,7 @@ export const usePortfolioStore = create((set, get) => ({
       // Remove category from skill data as it's not allowed in individual skill updates
       const { category, ...skillWithoutCategory } = skillData
       
-      console.log('Updating skill:', { categoryId, skillId, skillData: skillWithoutCategory })
       const response = await api.put(`/portfolio/skills/${categoryId}/skills/${skillId}`, skillWithoutCategory)
-      console.log('Skill update response:', response.data)
       // Refresh skills data to get updated structure
       await get().fetchSkills()
       return { success: true }
@@ -297,7 +320,6 @@ export const usePortfolioStore = create((set, get) => ({
   // Category management methods
   addCategory: async (categoryData) => {
     try {
-      console.log('Adding category with data:', categoryData)
       const response = await api.post('/portfolio/skills/categories', categoryData)
       // Refresh skills data to get updated structure
       await get().fetchSkills()
@@ -310,9 +332,7 @@ export const usePortfolioStore = create((set, get) => ({
 
   updateCategory: async (categoryId, categoryData) => {
     try {
-      console.log('Updating category:', { categoryId, categoryData })
       const response = await api.put(`/portfolio/skills/categories/${categoryId}`, categoryData)
-      console.log('Category update response:', response.data)
       // Refresh skills data to get updated structure
       await get().fetchSkills()
       return { success: true }

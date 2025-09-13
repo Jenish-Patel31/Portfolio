@@ -84,12 +84,27 @@ router.get('/projects', async (req, res) => {
     if (category) filter.category = category;
     if (featured !== undefined) filter.featured = featured === 'true';
     
-    const projects = await Project.find(filter).sort({ order: 1, createdAt: -1 });
+    const projects = await Project.find(filter).sort({ priority: 1, order: 1, createdAt: -1 });
+    
+    // Transform projects to handle backward compatibility
+    const transformedProjects = projects.map(project => {
+      const projectObj = project.toObject();
+      
+      // If project has images array but no image field, use first image
+      if (projectObj.images && Array.isArray(projectObj.images) && projectObj.images.length > 0 && !projectObj.image) {
+        projectObj.image = projectObj.images[0];
+      }
+      
+      // Remove images field from response
+      delete projectObj.images;
+      
+      return projectObj;
+    });
     
     res.json({
       status: 'success',
-      count: projects.length,
-      data: projects
+      count: transformedProjects.length,
+      data: transformedProjects
     });
   } catch (error) {
     console.error('Projects fetch error:', error);
@@ -114,9 +129,20 @@ router.get('/projects/:id', async (req, res) => {
       });
     }
 
+    // Transform project to handle backward compatibility
+    const projectObj = project.toObject();
+    
+    // If project has images array but no image field, use first image
+    if (projectObj.images && Array.isArray(projectObj.images) && projectObj.images.length > 0 && !projectObj.image) {
+      projectObj.image = projectObj.images[0];
+    }
+    
+    // Remove images field from response
+    delete projectObj.images;
+
     res.json({
       status: 'success',
-      data: project
+      data: projectObj
     });
   } catch (error) {
     console.error('Project fetch error:', error);
@@ -132,7 +158,15 @@ router.get('/projects/:id', async (req, res) => {
 // @access  Private (Admin only)
 router.post('/projects', auth, adminOnly, validate(portfolioSchemas.project), async (req, res) => {
   try {
-    const project = new Project(req.body);
+    
+    // Handle backward compatibility: convert images array to image string
+    const projectData = { ...req.body };
+    if (projectData.images && Array.isArray(projectData.images) && projectData.images.length > 0) {
+      projectData.image = projectData.images[0]; // Take first image
+    }
+    delete projectData.images; // Remove images field
+    
+    const project = new Project(projectData);
     await project.save();
 
     res.status(201).json({
@@ -154,9 +188,17 @@ router.post('/projects', auth, adminOnly, validate(portfolioSchemas.project), as
 // @access  Private (Admin only)
 router.put('/projects/:id', auth, adminOnly, validate(portfolioSchemas.project), async (req, res) => {
   try {
+    
+    // Handle backward compatibility: convert images array to image string
+    const projectData = { ...req.body };
+    if (projectData.images && Array.isArray(projectData.images) && projectData.images.length > 0) {
+      projectData.image = projectData.images[0]; // Take first image
+    }
+    delete projectData.images; // Remove images field
+    
     const project = await Project.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      projectData,
       { new: true, runValidators: true }
     );
 

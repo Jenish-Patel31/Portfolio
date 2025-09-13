@@ -1,12 +1,16 @@
 import { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Github, Linkedin, Mail, Heart, ArrowUp, Phone, MapPin, ExternalLink } from 'lucide-react'
+import { Github, Linkedin, Mail, ArrowUp, Phone, MapPin, ExternalLink, Shield } from 'lucide-react'
 import * as SI from 'react-icons/si';
 import { usePortfolioStore } from '../stores/portfolioStore'
+import { useAuthStore } from '../stores/authStore'
+import { useModalStore } from '../stores/modalStore'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
   const { hero, fetchHero, isLoading } = usePortfolioStore()
+  const { isAuthenticated, logout } = useAuthStore()
+  const { openLoginModal, openEditResumeModal } = useModalStore()
 
   useEffect(() => {
     fetchHero()
@@ -70,7 +74,7 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-text-primary">Quick Links</h3>
             <ul className="space-y-2 px-1">
-              {['Home', 'Skills', 'Experience', 'Projects', 'Education', 'Achievements'].map((item) => (
+              {['Home', 'Skills', 'Experience', 'Projects', 'Education', 'Achievements', 'Contact'].map((item) => (
                 <li key={item}>
                   <button
                     onClick={() => document.getElementById(item.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })}
@@ -80,6 +84,46 @@ const Footer = () => {
                   </button>
                 </li>
               ))}
+              
+              {/* Admin Login/Logout */}
+              <li>
+                {isAuthenticated ? (
+                  <motion.button
+                    onClick={logout}
+                    className="flex items-center space-x-2 text-text-secondary hover:text-red-500 transition-colors duration-200 text-sm cursor-pointer hover:underline group"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Shield className="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform duration-200" />
+                    <span>Admin Logout</span>
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    onClick={openLoginModal}
+                    className="flex items-center space-x-2 text-text-secondary hover:text-accent-blue transition-colors duration-200 text-sm cursor-pointer hover:underline group"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Shield className="w-4 h-4 text-accent-blue group-hover:scale-110 transition-transform duration-200" />
+                    <span>Admin Login</span>
+                  </motion.button>
+                )}
+              </li>
+              
+              {/* Edit Portfolio - Only visible when logged in */}
+              {isAuthenticated && (
+                <li>
+                  <motion.button
+                    onClick={openEditResumeModal}
+                    className="flex items-center space-x-2 text-text-secondary hover:text-accent-green transition-colors duration-200 text-sm cursor-pointer hover:underline group"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <ExternalLink className="w-4 h-4 text-accent-green group-hover:scale-110 transition-transform duration-200" />
+                    <span>Edit Portfolio</span>
+                  </motion.button>
+                </li>
+              )}
             </ul>
           </div>
 
@@ -176,21 +220,10 @@ const Footer = () => {
 
         {/* Bottom Section */}
         <div className="border-t border-border-color mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+          <div className="text-center">
             <p className="text-text-secondary text-sm">
               © {currentYear} {hero?.name || 'Jenish Patel'}. All rights reserved.
             </p>
-            
-            <div className="flex items-center space-x-2 text-text-secondary text-sm">
-              <span>Made with</span>
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <Heart className="w-4 h-4 text-red-500 fill-current" />
-              </motion.div>
-              <span>using React & Tailwind CSS</span>
-            </div>
           </div>
         </div>
       </div>

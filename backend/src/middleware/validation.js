@@ -75,7 +75,11 @@ const portfolioSchemas = {
     }),
     achievements: Joi.array().items(Joi.string().max(300)).optional(),
     technologies: Joi.array().items(Joi.string().max(50)).optional(),
-    location: Joi.string().max(200).optional()
+    location: Joi.string().max(200).optional(),
+    isActive: Joi.boolean().optional(),
+    createdAt: Joi.date().optional(),
+    updatedAt: Joi.date().optional(),
+    __v: Joi.number().optional()
   }),
   
   education: Joi.object({
@@ -105,7 +109,11 @@ const portfolioSchemas = {
     percentage: Joi.number().min(0).max(100).optional(),
     description: Joi.string().max(1000).optional(),
     location: Joi.string().max(200).optional(),
-    achievements: Joi.array().items(Joi.string().max(300)).optional()
+    achievements: Joi.array().items(Joi.string().max(300)).optional(),
+    isActive: Joi.boolean().optional(),
+    createdAt: Joi.date().optional(),
+    updatedAt: Joi.date().optional(),
+    __v: Joi.number().optional()
   }),
   
   achievement: Joi.object({
@@ -126,7 +134,11 @@ const portfolioSchemas = {
     }),
     organization: Joi.string().max(200).optional(),
     participants: Joi.number().min(1).optional(),
-    rank: Joi.number().min(1).optional()
+    rank: Joi.number().min(1).optional(),
+    isActive: Joi.boolean().optional(),
+    createdAt: Joi.date().optional(),
+    updatedAt: Joi.date().optional(),
+    __v: Joi.number().optional()
   }),
   
   leadership: Joi.object({
@@ -154,7 +166,11 @@ const portfolioSchemas = {
     keyContributions: Joi.array().items(Joi.string().max(300)).optional(),
     teamSize: Joi.number().min(1).optional(),
     impact: Joi.string().max(500).optional(),
-    skills: Joi.array().items(Joi.string()).optional()
+    skills: Joi.array().items(Joi.string()).optional(),
+    isActive: Joi.boolean().optional(),
+    createdAt: Joi.date().optional(),
+    updatedAt: Joi.date().optional(),
+    __v: Joi.number().optional()
   }),
   hero: Joi.object({
     name: Joi.string().required().max(100).messages({
@@ -205,7 +221,8 @@ const portfolioSchemas = {
       'any.required': 'Project summary is required'
     }),
     technologies: Joi.array().items(Joi.string().max(50)).optional(),
-    image: Joi.string().uri().allow('').optional(),
+    image: Joi.string().allow('').optional(),
+    images: Joi.array().items(Joi.string()).optional(), // Temporarily allow images field for backward compatibility
     liveUrl: Joi.string().uri().allow('').optional(),
     githubUrl: Joi.string().uri().allow('').optional(),
     featured: Joi.boolean().optional(),
@@ -213,7 +230,12 @@ const portfolioSchemas = {
     category: Joi.string().valid('web', 'mobile', 'ai', 'blockchain', 'devops', 'other').optional(),
     teamSize: Joi.number().integer().min(1).optional(),
     duration: Joi.string().max(100).optional(),
-    achievements: Joi.array().items(Joi.string().max(200)).optional()
+    achievements: Joi.array().items(Joi.string().max(200)).optional(),
+    isActive: Joi.boolean().optional(),
+    priority: Joi.number().integer().min(1).max(999).optional(),
+    createdAt: Joi.date().optional(),
+    updatedAt: Joi.date().optional(),
+    __v: Joi.number().optional()
   }),
   
   skill: Joi.object({
@@ -243,7 +265,9 @@ const portfolioSchemas = {
       'any.required': 'Skills array is required'
     }),
     order: Joi.number().integer().min(0).optional(),
-    isActive: Joi.boolean().optional()
+    isActive: Joi.boolean().optional(),
+    createdAt: Joi.date().optional(),
+    updatedAt: Joi.date().optional()
   })
 };
 

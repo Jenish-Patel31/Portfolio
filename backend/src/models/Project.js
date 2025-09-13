@@ -79,12 +79,18 @@ const projectSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  priority: {
+    type: Number,
+    default: 999,
+    min: [1, 'Priority must be at least 1'],
+    max: [999, 'Priority cannot exceed 999']
   }
 }, {
   timestamps: true
 });
 
 // Index for efficient querying
-projectSchema.index({ featured: 1, order: 1, category: 1, isActive: 1 });
+projectSchema.index({ priority: 1, featured: 1, order: 1, category: 1, isActive: 1 });
 
 module.exports = mongoose.model('Project', projectSchema);
