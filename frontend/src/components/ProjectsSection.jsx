@@ -59,6 +59,15 @@ const techIconMap = {
   npm: 'SiNpm',
   yarn: 'SiYarn',
   pnpm: 'SiPnpm',
+  // Additional icons for your tech stack
+  framermotion: 'SiFramer',
+  'framer-motion': 'SiFramer',
+  framer: 'SiFramer',
+  google: 'SiGoogle',
+  gemini: 'SiGoogle', // Using Google icon for Gemini
+  'google-gemini': 'SiGoogle',
+  'firebase-admin': 'SiFirebase',
+  admin: 'SiFirebase',
   ...SI // fallback for all SI icons
 };
 import { usePortfolioStore } from '../stores/portfolioStore'
@@ -191,7 +200,7 @@ const ProjectsSection = () => {
     <>
     <section id="projects" className="py-10 px-4">
       <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
+        {/* Section Header with Highlighted Skills */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -202,6 +211,7 @@ const ProjectsSection = () => {
           <h2 className="section-title">
             Featured <span className="gradient-text">Projects</span>
           </h2>
+          
         </motion.div>
 
         {/* Projects Grid - Show only first 3 projects */}
@@ -297,27 +307,73 @@ const ProjectsSection = () => {
                   {project.category}
                 </div>
 
-                {/* Technologies */}
-                <div className="flex flex-wrap gap-2">
-                  {project.technologies?.slice(0, 3).map((tech, techIndex) => {
-                    const key = tech.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    const iconName = techIconMap[key];
-                    const Icon = SI[iconName] || null;
-                    return (
-                      <span
-                        key={techIndex}
-                        className="flex items-center gap-1 px-2 py-1 bg-bg-secondary text-text-secondary text-xs rounded-md mx-1 my-1"
-                      >
-                        {Icon && <Icon size={20} title={tech + ' logo'} color="unset" style={{ display: 'block', marginRight: '0.25rem' }} />}
-                        {tech}
-                      </span>
-                    );
-                  })}
-                  {project.technologies?.length > 3 && (
-                    <span className="px-2 py-1 bg-bg-secondary text-text-secondary text-xs rounded-md">
-                      +{project.technologies.length - 3}
-                    </span>
-                  )}
+                {/* Enhanced Technologies with Highlighted Skills */}
+                <div className="space-y-3">
+                  <div className="text-xs text-text-secondary font-medium">Technologies Used:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {project.technologies?.map((tech, techIndex) => {
+                      const key = tech.toLowerCase().replace(/[^a-z0-9]/g, '');
+                      const iconName = techIconMap[key];
+                      const Icon = SI[iconName] || null;
+                      
+                      // Define skill categories and colors
+                      const getTechCategory = (techName) => {
+                        const tech = techName.toLowerCase();
+                        if (['react', 'vue', 'angular', 'svelte', 'html', 'css', 'javascript', 'typescript', 'tailwind', 'bootstrap'].includes(tech)) return 'frontend';
+                        if (['node', 'express', 'python', 'java', 'c++', 'go', 'rust', 'mongodb', 'mysql', 'postgresql'].includes(tech)) return 'backend';
+                        if (['docker', 'kubernetes', 'aws', 'azure', 'jenkins', 'git', 'linux'].includes(tech)) return 'devops';
+                        if (['react native', 'flutter', 'swift', 'kotlin', 'android', 'ios'].includes(tech)) return 'mobile';
+                        if (['ai', 'ml', 'tensorflow', 'pytorch', 'opencv', 'numpy'].includes(tech)) return 'ai';
+                        if (['blockchain', 'ethereum', 'solidity', 'web3', 'smart contracts'].includes(tech)) return 'blockchain';
+                        return 'other';
+                      };
+                      
+                      const getTechColor = (category) => {
+                        const colors = {
+                          frontend: 'bg-accent-blue/20 text-accent-blue border-accent-blue/30 hover:bg-accent-blue/30',
+                          backend: 'bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30',
+                          devops: 'bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30',
+                          mobile: 'bg-orange-500/20 text-orange-400 border-orange-500/30 hover:bg-orange-500/30',
+                          ai: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30',
+                          blockchain: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/30',
+                          other: 'bg-gray-500/20 text-gray-400 border-gray-500/30 hover:bg-gray-500/30'
+                        };
+                        return colors[category] || colors.other;
+                      };
+                      
+                      const category = getTechCategory(tech);
+                      const colorClass = getTechColor(category);
+                      
+                      return (
+                        <motion.span
+                          key={techIndex}
+                          className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-all duration-200 hover:scale-110 hover:shadow-lg ${colorClass}`}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          whileHover={{ 
+                            scale: 1.1,
+                            y: -3,
+                            boxShadow: "0 8px 25px rgba(0, 0, 0, 0.15)"
+                          }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {Icon && (
+                            <motion.div
+                              className="flex items-center justify-center"
+                              whileHover={{ 
+                                rotate: 8,
+                                scale: 1.1
+                              }}
+                              transition={{ duration: 0.15 }}
+                            >
+                              <Icon size={16} title={tech + ' logo'} />
+                            </motion.div>
+                          )}
+                          <span className="font-medium">{tech}</span>
+                        </motion.span>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Action Buttons - GitHub button moved to floating top-right, Live button moved to floating top-left */}

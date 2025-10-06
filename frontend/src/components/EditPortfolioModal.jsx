@@ -79,10 +79,10 @@ const EditPortfolioModal = () => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  // Handle array field changes (like technologies)
+  // Handle array field changes (like technologies) - FIXED VERSION
   const handleArrayFieldChange = (field, value) => {
-    const arrayValue = value.split(',').map(item => item.trim()).filter(item => item)
-    setFormData(prev => ({ ...prev, [field]: arrayValue }))
+    // Store the string value directly, don't convert to array until saving
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   // Handle image upload
@@ -543,7 +543,7 @@ const EditPortfolioModal = () => {
         <label className="block text-sm font-medium text-text-primary mb-2">Technologies</label>
         <input
           type="text"
-          value={formData.technologies || ''}
+          value={Array.isArray(formData.technologies) ? formData.technologies.join(', ') : (formData.technologies || '')}
           onChange={(e) => handleArrayFieldChange('technologies', e.target.value)}
           className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
           placeholder="React, Node.js, MongoDB (comma separated)"
@@ -771,7 +771,7 @@ const EditPortfolioModal = () => {
         <label className="block text-sm font-medium text-text-primary mb-2">Technologies</label>
         <input
           type="text"
-          value={formData.technologies || ''}
+          value={Array.isArray(formData.technologies) ? formData.technologies.join(', ') : (formData.technologies || '')}
           onChange={(e) => handleArrayFieldChange('technologies', e.target.value)}
           className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
           placeholder="React, Node.js, Docker (comma separated)"
@@ -781,7 +781,7 @@ const EditPortfolioModal = () => {
       <div>
         <label className="block text-sm font-medium text-text-primary mb-2">Achievements</label>
         <textarea
-          value={formData.achievements || ''}
+          value={Array.isArray(formData.achievements) ? formData.achievements.join(', ') : (formData.achievements || '')}
           onChange={(e) => handleArrayFieldChange('achievements', e.target.value)}
           rows={3}
           className="w-full px-3 py-2 bg-bg-secondary border border-border-color rounded-lg text-text-primary"
@@ -1685,7 +1685,7 @@ const EditPortfolioModal = () => {
                             <p className="text-sm text-text-secondary">Projects are sorted by priority (1 = highest, 999 = default)</p>
                           </div>
                           <button
-                            onClick={() => addNewItem('projects')}
+                            onClick={() => addNewItem('project')}
                             className="flex items-center space-x-2 px-4 py-2 bg-accent-blue text-white rounded-lg hover:bg-accent-blue/90 transition-colors"
                           >
                             <Plus className="w-4 h-4" />

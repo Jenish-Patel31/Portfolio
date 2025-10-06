@@ -71,8 +71,50 @@ router.post('/query', async (req, res) => {
       });
     }
 
-    // Initialize Gemini model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Resolve model to use (env override + sensible fallbacks)
+    const configuredModel = process.env.GEMINI_MODEL && process.env.GEMINI_MODEL.trim().length > 0
+      ? process.env.GEMINI_MODEL.trim()
+      : "gemini-1.5-flash";
+
+    // Prefer 2.0 models, then fall back to older widely available IDs
+    const candidateModels = [
+      configuredModel,
+      "gemini-2.0-flash",
+      "gemini-1.5-flash-latest",
+      "gemini-1.5-pro",
+      "gemini-pro" // supported by older SDK versions
+      // "gemini-2.0-pro",
+    ];
+
+    let aiResponse;
+    let lastError;
+
+    // Try models in order until one succeeds
+    for (const modelName of candidateModels) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(conversationContext);
+        const response = await result.response;
+        aiResponse = response.text();
+        // On success, break out
+        break;
+      } catch (err) {
+        lastError = err;
+        // Continue trying the next candidate on 404/unsupported errors
+        const msg = (err && err.message) ? err.message.toLowerCase() : "";
+        const isModelNotFound = msg.includes("not found") || msg.includes("unsupported") || msg.includes("404");
+        if (!isModelNotFound) {
+          // If it's not a model-availability issue, rethrow immediately
+          throw err;
+        }
+        // Otherwise, try next model
+      }
+    }
+
+    if (!aiResponse) {
+      // Exhausted all candidates
+      throw lastError || new Error("Unable to generate response with available Gemini models");
+    }
 
     // Prepare conversation context
     let conversationContext = portfolioContext;
@@ -88,10 +130,7 @@ router.post('/query', async (req, res) => {
     // Add current user message
     conversationContext += `\n\n**Current User Question:** ${message}`;
 
-    // Generate response
-    const result = await model.generateContent(conversationContext);
-    const response = await result.response;
-    const aiResponse = response.text();
+    // Generate response succeeded above
 
     res.json({
       status: 'success',
