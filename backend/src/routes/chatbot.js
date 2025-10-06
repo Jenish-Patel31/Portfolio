@@ -71,6 +71,20 @@ router.post('/query', async (req, res) => {
       });
     }
 
+    // Prepare conversation context first (used in model calls below)
+    let conversationContext = portfolioContext;
+    
+    // Add conversation history if provided
+    if (conversationHistory.length > 0) {
+      conversationContext += '\n\n**Recent Conversation Context:**\n';
+      conversationHistory.slice(-5).forEach((msg, index) => {
+        conversationContext += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
+      });
+    }
+
+    // Add current user message
+    conversationContext += `\n\n**Current User Question:** ${message}`;
+
     // Resolve model to use (env override + sensible fallbacks)
     const configuredModel = process.env.GEMINI_MODEL && process.env.GEMINI_MODEL.trim().length > 0
       ? process.env.GEMINI_MODEL.trim()
@@ -115,20 +129,6 @@ router.post('/query', async (req, res) => {
       // Exhausted all candidates
       throw lastError || new Error("Unable to generate response with available Gemini models");
     }
-
-    // Prepare conversation context
-    let conversationContext = portfolioContext;
-    
-    // Add conversation history if provided
-    if (conversationHistory.length > 0) {
-      conversationContext += '\n\n**Recent Conversation Context:**\n';
-      conversationHistory.slice(-5).forEach((msg, index) => {
-        conversationContext += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
-      });
-    }
-
-    // Add current user message
-    conversationContext += `\n\n**Current User Question:** ${message}`;
 
     // Generate response succeeded above
 

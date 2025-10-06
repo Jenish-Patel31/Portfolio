@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Send, Bot, User } from 'lucide-react'
 import { useModalStore } from '../stores/modalStore'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import api from '../utils/api'
 import toast from 'react-hot-toast'
 
@@ -133,7 +135,13 @@ const ChatbotModal = () => {
                         ? 'bg-accent-blue text-white'
                         : 'bg-bg-card border border-border-color text-text-primary'
                     }`}>
-                      <p className="text-sm">{message.content}</p>
+                      {message.type === 'ai' ? (
+                        <div className="prose prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-li:my-0 prose-strong:text-white">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="text-sm">{message.content}</p>
+                      )}
                       <p className={`text-xs mt-1 ${
                         message.type === 'user' ? 'text-blue-100' : 'text-text-secondary'
                       }`}>

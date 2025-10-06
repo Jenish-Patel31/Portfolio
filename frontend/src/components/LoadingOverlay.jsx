@@ -73,7 +73,7 @@ const LoadingOverlay = () => {
               <p className="text-gray-300 text-sm">
                 {backendStatus === 'error' 
                   ? 'My portfolio server is currently unavailable. Please try refreshing the page.'
-                  : 'Preparing Jenish's Dynamic Portfolio...'
+                  : "Preparing Jenish's Dynamic Portfolio..."
                 }
               </p>
             </motion.div>
